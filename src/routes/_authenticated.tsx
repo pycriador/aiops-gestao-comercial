@@ -18,10 +18,11 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/portfolio", label: "Carteira", icon: Briefcase },
+  { to: "/bot", label: "Bot WhatsApp", icon: MessageSquare, managerOnly: true },
   { to: "/import", label: "Importar", icon: Upload, adminOnly: true },
   { to: "/consultants", label: "Consultores", icon: Users, managerOnly: true },
   { to: "/settings/hubspot", label: "HubSpot", icon: Settings, managerOnly: true },
-  { to: "/settings/users", label: "Usuários", icon: MessageSquare, adminOnly: true },
+  { to: "/settings/users", label: "Usuários", icon: Users, adminOnly: true },
 ];
 
 function AuthedLayout() {
