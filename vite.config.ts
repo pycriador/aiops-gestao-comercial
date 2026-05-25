@@ -12,4 +12,9 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  vite: {
+    optimizeDeps: {
+      include: ["@dnd-kit/core", "@dnd-kit/sortable", "recharts", "xlsx"],
+    },
+  },
 });
