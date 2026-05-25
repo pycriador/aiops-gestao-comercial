@@ -16,11 +16,13 @@ import { Route as AuthenticatedPortfolioRouteImport } from './routes/_authentica
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConsultantsRouteImport } from './routes/_authenticated/consultants'
+import { Route as AuthenticatedBotRouteImport } from './routes/_authenticated/bot'
 import { Route as AuthenticatedPortfolioIndexRouteImport } from './routes/_authenticated/portfolio.index'
 import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings.users'
 import { Route as AuthenticatedSettingsHubspotRouteImport } from './routes/_authenticated/settings.hubspot'
 import { Route as AuthenticatedPortfolioNewRouteImport } from './routes/_authenticated/portfolio.new'
 import { Route as AuthenticatedPortfolioAgencyIdRouteImport } from './routes/_authenticated/portfolio.$agencyId'
+import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -57,6 +59,11 @@ const AuthenticatedConsultantsRoute =
     path: '/consultants',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedBotRoute = AuthenticatedBotRouteImport.update({
+  id: '/bot',
+  path: '/bot',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPortfolioIndexRoute =
   AuthenticatedPortfolioIndexRouteImport.update({
     id: '/',
@@ -87,10 +94,17 @@ const AuthenticatedPortfolioAgencyIdRoute =
     path: '/$agencyId',
     getParentRoute: () => AuthenticatedPortfolioRoute,
   } as any)
+const ApiPublicWhatsappWebhookRoute =
+  ApiPublicWhatsappWebhookRouteImport.update({
+    id: '/api/public/whatsapp/webhook',
+    path: '/api/public/whatsapp/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/bot': typeof AuthenticatedBotRoute
   '/consultants': typeof AuthenticatedConsultantsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/import': typeof AuthenticatedImportRoute
@@ -100,10 +114,12 @@ export interface FileRoutesByFullPath {
   '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/portfolio/': typeof AuthenticatedPortfolioIndexRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/bot': typeof AuthenticatedBotRoute
   '/consultants': typeof AuthenticatedConsultantsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/import': typeof AuthenticatedImportRoute
@@ -112,12 +128,14 @@ export interface FileRoutesByTo {
   '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/portfolio': typeof AuthenticatedPortfolioIndexRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/bot': typeof AuthenticatedBotRoute
   '/_authenticated/consultants': typeof AuthenticatedConsultantsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
@@ -127,12 +145,14 @@ export interface FileRoutesById {
   '/_authenticated/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
   '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/_authenticated/portfolio/': typeof AuthenticatedPortfolioIndexRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/bot'
     | '/consultants'
     | '/dashboard'
     | '/import'
@@ -142,10 +162,12 @@ export interface FileRouteTypes {
     | '/settings/hubspot'
     | '/settings/users'
     | '/portfolio/'
+    | '/api/public/whatsapp/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/bot'
     | '/consultants'
     | '/dashboard'
     | '/import'
@@ -154,11 +176,13 @@ export interface FileRouteTypes {
     | '/settings/hubspot'
     | '/settings/users'
     | '/portfolio'
+    | '/api/public/whatsapp/webhook'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/bot'
     | '/_authenticated/consultants'
     | '/_authenticated/dashboard'
     | '/_authenticated/import'
@@ -168,12 +192,14 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/hubspot'
     | '/_authenticated/settings/users'
     | '/_authenticated/portfolio/'
+    | '/api/public/whatsapp/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -227,6 +253,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConsultantsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/bot': {
+      id: '/_authenticated/bot'
+      path: '/bot'
+      fullPath: '/bot'
+      preLoaderRoute: typeof AuthenticatedBotRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/portfolio/': {
       id: '/_authenticated/portfolio/'
       path: '/'
@@ -262,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortfolioAgencyIdRouteImport
       parentRoute: typeof AuthenticatedPortfolioRoute
     }
+    '/api/public/whatsapp/webhook': {
+      id: '/api/public/whatsapp/webhook'
+      path: '/api/public/whatsapp/webhook'
+      fullPath: '/api/public/whatsapp/webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -284,6 +324,7 @@ const AuthenticatedPortfolioRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedBotRoute: typeof AuthenticatedBotRoute
   AuthenticatedConsultantsRoute: typeof AuthenticatedConsultantsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
@@ -293,6 +334,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedBotRoute: AuthenticatedBotRoute,
   AuthenticatedConsultantsRoute: AuthenticatedConsultantsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
@@ -309,6 +351,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
