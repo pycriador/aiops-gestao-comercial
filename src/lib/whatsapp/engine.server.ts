@@ -109,7 +109,7 @@ async function updateSession(id: string, patch: Partial<Session>) {
   await supabaseAdmin.from("bot_sessions").update(payload).eq("id", id);
 }
 
-async function closeSession(id: string, status: "completed" | "cancelled" | "expired") {
+async function closeSession(id: string, status: "completed" | "abandoned") {
   await supabaseAdmin.from("bot_sessions").update({ status, current_step: "done" }).eq("id", id);
 }
 
