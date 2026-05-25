@@ -91,8 +91,11 @@ export type Database = {
           agency_id: string | null
           consultant_id: string | null
           created_at: string
+          current_flow: string | null
           current_step: string
+          expires_at: string
           id: string
+          last_message_at: string
           phone: string
           session_data: Json
           status: Database["public"]["Enums"]["bot_session_status"]
@@ -102,8 +105,11 @@ export type Database = {
           agency_id?: string | null
           consultant_id?: string | null
           created_at?: string
+          current_flow?: string | null
           current_step?: string
+          expires_at?: string
           id?: string
+          last_message_at?: string
           phone: string
           session_data?: Json
           status?: Database["public"]["Enums"]["bot_session_status"]
@@ -113,8 +119,11 @@ export type Database = {
           agency_id?: string | null
           consultant_id?: string | null
           created_at?: string
+          current_flow?: string | null
           current_step?: string
+          expires_at?: string
           id?: string
+          last_message_at?: string
           phone?: string
           session_data?: Json
           status?: Database["public"]["Enums"]["bot_session_status"]
@@ -317,34 +326,46 @@ export type Database = {
       }
       whatsapp_messages: {
         Row: {
+          agency_id: string | null
           consultant_id: string | null
           created_at: string
           direction: Database["public"]["Enums"]["message_direction"]
+          error_message: string | null
+          flow: string | null
           id: string
           message_body: string | null
           parsed_intent: string | null
           phone: string
           raw_payload: Json | null
+          status: string
         }
         Insert: {
+          agency_id?: string | null
           consultant_id?: string | null
           created_at?: string
           direction: Database["public"]["Enums"]["message_direction"]
+          error_message?: string | null
+          flow?: string | null
           id?: string
           message_body?: string | null
           parsed_intent?: string | null
           phone: string
           raw_payload?: Json | null
+          status?: string
         }
         Update: {
+          agency_id?: string | null
           consultant_id?: string | null
           created_at?: string
           direction?: Database["public"]["Enums"]["message_direction"]
+          error_message?: string | null
+          flow?: string | null
           id?: string
           message_body?: string | null
           parsed_intent?: string | null
           phone?: string
           raw_payload?: Json | null
+          status?: string
         }
         Relationships: [
           {
@@ -361,6 +382,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      expire_stale_bot_sessions: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
