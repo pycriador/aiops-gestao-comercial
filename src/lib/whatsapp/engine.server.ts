@@ -221,7 +221,7 @@ async function route(ctx: BotContext): Promise<BotReply> {
 
   // Global commands — always available
   if (intent === "cancel") {
-    await closeSession(ctx.session.id, "cancelled");
+    await closeSession(ctx.session.id, "abandoned");
     return { text: "❌ Fluxo cancelado.\n\n" + MENU_TEXT, done: true };
   }
   if (intent === "help") {
@@ -443,7 +443,7 @@ async function runUpdateAgency(ctx: BotContext): Promise<BotReply> {
     case "confirm": {
       const choice = parseChoice(msg, 3);
       if (choice === 3) {
-        await closeSession(ctx.session.id, "cancelled");
+        await closeSession(ctx.session.id, "abandoned");
         return { text: "❌ Atualização cancelada.\n\n" + MENU_TEXT, done: true };
       }
       if (choice === 2) {
@@ -548,7 +548,7 @@ async function runNewAgency(ctx: BotContext): Promise<BotReply> {
     case "dedup": {
       const choice = parseChoice(msg, 3);
       if (choice === 3) {
-        await closeSession(ctx.session.id, "cancelled");
+        await closeSession(ctx.session.id, "abandoned");
         return { text: "❌ Cancelado.", done: true };
       }
       if (choice === 1) {
@@ -611,7 +611,7 @@ async function runNewAgency(ctx: BotContext): Promise<BotReply> {
     case "confirm": {
       const c = parseChoice(msg, 2);
       if (c === 2) {
-        await closeSession(ctx.session.id, "cancelled");
+        await closeSession(ctx.session.id, "abandoned");
         return { text: "❌ Cadastro cancelado.", done: true };
       }
       if (c !== 1) return { text: "Responda 1 (Confirmar) ou 2 (Cancelar)." };
