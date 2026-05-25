@@ -187,7 +187,7 @@ export async function processInbound(opts: {
   try {
     const reply = await route({ consultant, session, message: opts.body });
 
-    await supabaseAdmin.from("whatsapp_messages").update({ status: "processed" }).eq("id", inboundLog.data?.id);
+    await supabaseAdmin.from("whatsapp_messages").update({ status: "processed" }).eq("id", inboundLog.data?.id ?? "");
 
     return {
       reply: reply.text,
@@ -201,7 +201,7 @@ export async function processInbound(opts: {
     await supabaseAdmin
       .from("whatsapp_messages")
       .update({ status: "error", error_message: e?.message ?? "unknown" })
-      .eq("id", inboundLog.data?.id);
+      .eq("id", inboundLog.data?.id ?? "");
     return {
       reply: "⚠️ Ocorreu um erro ao processar. Digite *menu* para reiniciar.",
       consultant,
