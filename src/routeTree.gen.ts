@@ -21,6 +21,7 @@ import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authen
 import { Route as AuthenticatedSettingsHubspotRouteImport } from './routes/_authenticated/settings.hubspot'
 import { Route as AuthenticatedPortfolioNewRouteImport } from './routes/_authenticated/portfolio.new'
 import { Route as AuthenticatedPortfolioAgencyIdRouteImport } from './routes/_authenticated/portfolio.$agencyId'
+import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -87,6 +88,12 @@ const AuthenticatedPortfolioAgencyIdRoute =
     path: '/$agencyId',
     getParentRoute: () => AuthenticatedPortfolioRoute,
   } as any)
+const ApiPublicWhatsappWebhookRoute =
+  ApiPublicWhatsappWebhookRouteImport.update({
+    id: '/api/public/whatsapp/webhook',
+    path: '/api/public/whatsapp/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/portfolio/': typeof AuthenticatedPortfolioIndexRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -112,6 +120,7 @@ export interface FileRoutesByTo {
   '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/portfolio': typeof AuthenticatedPortfolioIndexRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -127,6 +136,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
   '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/_authenticated/portfolio/': typeof AuthenticatedPortfolioIndexRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/settings/hubspot'
     | '/settings/users'
     | '/portfolio/'
+    | '/api/public/whatsapp/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/settings/hubspot'
     | '/settings/users'
     | '/portfolio'
+    | '/api/public/whatsapp/webhook'
   id:
     | '__root__'
     | '/'
@@ -168,12 +180,14 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/hubspot'
     | '/_authenticated/settings/users'
     | '/_authenticated/portfolio/'
+    | '/api/public/whatsapp/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -262,6 +276,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortfolioAgencyIdRouteImport
       parentRoute: typeof AuthenticatedPortfolioRoute
     }
+    '/api/public/whatsapp/webhook': {
+      id: '/api/public/whatsapp/webhook'
+      path: '/api/public/whatsapp/webhook'
+      fullPath: '/api/public/whatsapp/webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,7 +330,18 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
