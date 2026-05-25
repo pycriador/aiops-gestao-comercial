@@ -9,38 +9,189 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedPortfolioRouteImport } from './routes/_authenticated/portfolio'
+import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedConsultantsRouteImport } from './routes/_authenticated/consultants'
+import { Route as AuthenticatedPortfolioIndexRouteImport } from './routes/_authenticated/portfolio.index'
+import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings.users'
+import { Route as AuthenticatedSettingsHubspotRouteImport } from './routes/_authenticated/settings.hubspot'
+import { Route as AuthenticatedPortfolioNewRouteImport } from './routes/_authenticated/portfolio.new'
+import { Route as AuthenticatedPortfolioAgencyIdRouteImport } from './routes/_authenticated/portfolio.$agencyId'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPortfolioRoute = AuthenticatedPortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedConsultantsRoute =
+  AuthenticatedConsultantsRouteImport.update({
+    id: '/consultants',
+    path: '/consultants',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPortfolioIndexRoute =
+  AuthenticatedPortfolioIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPortfolioRoute,
+  } as any)
+const AuthenticatedSettingsUsersRoute =
+  AuthenticatedSettingsUsersRouteImport.update({
+    id: '/settings/users',
+    path: '/settings/users',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsHubspotRoute =
+  AuthenticatedSettingsHubspotRouteImport.update({
+    id: '/settings/hubspot',
+    path: '/settings/hubspot',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPortfolioNewRoute =
+  AuthenticatedPortfolioNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedPortfolioRoute,
+  } as any)
+const AuthenticatedPortfolioAgencyIdRoute =
+  AuthenticatedPortfolioAgencyIdRouteImport.update({
+    id: '/$agencyId',
+    path: '/$agencyId',
+    getParentRoute: () => AuthenticatedPortfolioRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/consultants': typeof AuthenticatedConsultantsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/import': typeof AuthenticatedImportRoute
+  '/portfolio': typeof AuthenticatedPortfolioRouteWithChildren
+  '/portfolio/$agencyId': typeof AuthenticatedPortfolioAgencyIdRoute
+  '/portfolio/new': typeof AuthenticatedPortfolioNewRoute
+  '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
+  '/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/portfolio/': typeof AuthenticatedPortfolioIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/consultants': typeof AuthenticatedConsultantsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/import': typeof AuthenticatedImportRoute
+  '/portfolio/$agencyId': typeof AuthenticatedPortfolioAgencyIdRoute
+  '/portfolio/new': typeof AuthenticatedPortfolioNewRoute
+  '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
+  '/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/portfolio': typeof AuthenticatedPortfolioIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authenticated/consultants': typeof AuthenticatedConsultantsRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/import': typeof AuthenticatedImportRoute
+  '/_authenticated/portfolio': typeof AuthenticatedPortfolioRouteWithChildren
+  '/_authenticated/portfolio/$agencyId': typeof AuthenticatedPortfolioAgencyIdRoute
+  '/_authenticated/portfolio/new': typeof AuthenticatedPortfolioNewRoute
+  '/_authenticated/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
+  '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
+  '/_authenticated/portfolio/': typeof AuthenticatedPortfolioIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/consultants'
+    | '/dashboard'
+    | '/import'
+    | '/portfolio'
+    | '/portfolio/$agencyId'
+    | '/portfolio/new'
+    | '/settings/hubspot'
+    | '/settings/users'
+    | '/portfolio/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/consultants'
+    | '/dashboard'
+    | '/import'
+    | '/portfolio/$agencyId'
+    | '/portfolio/new'
+    | '/settings/hubspot'
+    | '/settings/users'
+    | '/portfolio'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/login'
+    | '/_authenticated/consultants'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/import'
+    | '/_authenticated/portfolio'
+    | '/_authenticated/portfolio/$agencyId'
+    | '/_authenticated/portfolio/new'
+    | '/_authenticated/settings/hubspot'
+    | '/_authenticated/settings/users'
+    | '/_authenticated/portfolio/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +199,117 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/portfolio': {
+      id: '/_authenticated/portfolio'
+      path: '/portfolio'
+      fullPath: '/portfolio'
+      preLoaderRoute: typeof AuthenticatedPortfolioRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/import': {
+      id: '/_authenticated/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof AuthenticatedImportRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/consultants': {
+      id: '/_authenticated/consultants'
+      path: '/consultants'
+      fullPath: '/consultants'
+      preLoaderRoute: typeof AuthenticatedConsultantsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/portfolio/': {
+      id: '/_authenticated/portfolio/'
+      path: '/'
+      fullPath: '/portfolio/'
+      preLoaderRoute: typeof AuthenticatedPortfolioIndexRouteImport
+      parentRoute: typeof AuthenticatedPortfolioRoute
+    }
+    '/_authenticated/settings/users': {
+      id: '/_authenticated/settings/users'
+      path: '/settings/users'
+      fullPath: '/settings/users'
+      preLoaderRoute: typeof AuthenticatedSettingsUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/hubspot': {
+      id: '/_authenticated/settings/hubspot'
+      path: '/settings/hubspot'
+      fullPath: '/settings/hubspot'
+      preLoaderRoute: typeof AuthenticatedSettingsHubspotRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/portfolio/new': {
+      id: '/_authenticated/portfolio/new'
+      path: '/new'
+      fullPath: '/portfolio/new'
+      preLoaderRoute: typeof AuthenticatedPortfolioNewRouteImport
+      parentRoute: typeof AuthenticatedPortfolioRoute
+    }
+    '/_authenticated/portfolio/$agencyId': {
+      id: '/_authenticated/portfolio/$agencyId'
+      path: '/$agencyId'
+      fullPath: '/portfolio/$agencyId'
+      preLoaderRoute: typeof AuthenticatedPortfolioAgencyIdRouteImport
+      parentRoute: typeof AuthenticatedPortfolioRoute
+    }
   }
 }
 
+interface AuthenticatedPortfolioRouteChildren {
+  AuthenticatedPortfolioAgencyIdRoute: typeof AuthenticatedPortfolioAgencyIdRoute
+  AuthenticatedPortfolioNewRoute: typeof AuthenticatedPortfolioNewRoute
+  AuthenticatedPortfolioIndexRoute: typeof AuthenticatedPortfolioIndexRoute
+}
+
+const AuthenticatedPortfolioRouteChildren: AuthenticatedPortfolioRouteChildren =
+  {
+    AuthenticatedPortfolioAgencyIdRoute: AuthenticatedPortfolioAgencyIdRoute,
+    AuthenticatedPortfolioNewRoute: AuthenticatedPortfolioNewRoute,
+    AuthenticatedPortfolioIndexRoute: AuthenticatedPortfolioIndexRoute,
+  }
+
+const AuthenticatedPortfolioRouteWithChildren =
+  AuthenticatedPortfolioRoute._addFileChildren(
+    AuthenticatedPortfolioRouteChildren,
+  )
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedConsultantsRoute: typeof AuthenticatedConsultantsRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedImportRoute: typeof AuthenticatedImportRoute
+  AuthenticatedPortfolioRoute: typeof AuthenticatedPortfolioRouteWithChildren
+  AuthenticatedSettingsHubspotRoute: typeof AuthenticatedSettingsHubspotRoute
+  AuthenticatedSettingsUsersRoute: typeof AuthenticatedSettingsUsersRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedConsultantsRoute: AuthenticatedConsultantsRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedImportRoute: AuthenticatedImportRoute,
+  AuthenticatedPortfolioRoute: AuthenticatedPortfolioRouteWithChildren,
+  AuthenticatedSettingsHubspotRoute: AuthenticatedSettingsHubspotRoute,
+  AuthenticatedSettingsUsersRoute: AuthenticatedSettingsUsersRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

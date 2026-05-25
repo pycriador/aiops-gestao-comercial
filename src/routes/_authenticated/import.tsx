@@ -122,8 +122,8 @@ function ImportPage() {
     let created = 0, updated = 0, failed = 0;
     const { data: { user } } = await supabase.auth.getUser();
     for (const r of valid) {
-      const payload = { ...r.parsed, updated_by: user?.id };
-      delete payload.consultant_name;
+      const { consultant_name, ...rest } = r.parsed as any;
+      const payload: any = { ...rest, updated_by: user?.id };
       if (r.action === "update" && r.existingId) {
         const { error } = await supabase.from("real_estate_agencies").update(payload).eq("id", r.existingId);
         if (error) failed++; else updated++;
