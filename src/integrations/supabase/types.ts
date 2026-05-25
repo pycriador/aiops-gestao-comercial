@@ -14,16 +14,381 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agency_interactions: {
+        Row: {
+          agency_id: string
+          c_level_support_needed: boolean | null
+          contract_stock: number | null
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          current_offer: string | null
+          feedback: string | null
+          id: string
+          interaction_date: string
+          interaction_type: string | null
+          next_steps: string | null
+          source: Database["public"]["Enums"]["update_source"]
+          status_after: Database["public"]["Enums"]["negotiation_status"] | null
+          status_before:
+            | Database["public"]["Enums"]["negotiation_status"]
+            | null
+        }
+        Insert: {
+          agency_id: string
+          c_level_support_needed?: boolean | null
+          contract_stock?: number | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          current_offer?: string | null
+          feedback?: string | null
+          id?: string
+          interaction_date?: string
+          interaction_type?: string | null
+          next_steps?: string | null
+          source?: Database["public"]["Enums"]["update_source"]
+          status_after?:
+            | Database["public"]["Enums"]["negotiation_status"]
+            | null
+          status_before?:
+            | Database["public"]["Enums"]["negotiation_status"]
+            | null
+        }
+        Update: {
+          agency_id?: string
+          c_level_support_needed?: boolean | null
+          contract_stock?: number | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          current_offer?: string | null
+          feedback?: string | null
+          id?: string
+          interaction_date?: string
+          interaction_type?: string | null
+          next_steps?: string | null
+          source?: Database["public"]["Enums"]["update_source"]
+          status_after?:
+            | Database["public"]["Enums"]["negotiation_status"]
+            | null
+          status_before?:
+            | Database["public"]["Enums"]["negotiation_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_interactions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_sessions: {
+        Row: {
+          agency_id: string | null
+          consultant_id: string | null
+          created_at: string
+          current_step: string
+          id: string
+          phone: string
+          session_data: Json
+          status: Database["public"]["Enums"]["bot_session_status"]
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string | null
+          consultant_id?: string | null
+          created_at?: string
+          current_step?: string
+          id?: string
+          phone: string
+          session_data?: Json
+          status?: Database["public"]["Enums"]["bot_session_status"]
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string | null
+          consultant_id?: string | null
+          created_at?: string
+          current_step?: string
+          id?: string
+          phone?: string
+          session_data?: Json
+          status?: Database["public"]["Enums"]["bot_session_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_sessions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_sessions_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "consultants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultants: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          regional: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          regional?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          regional?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      hubspot_mappings: {
+        Row: {
+          agency_id: string
+          created_at: string
+          hubspot_company_id: string | null
+          hubspot_contact_id: string | null
+          id: string
+          last_synced_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          hubspot_company_id?: string | null
+          hubspot_contact_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          hubspot_company_id?: string | null
+          hubspot_contact_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hubspot_mappings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "real_estate_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      real_estate_agencies: {
+        Row: {
+          c_level_support_needed: boolean
+          city: string
+          consultant_id: string | null
+          contact_role: string | null
+          contract_stock: number
+          created_at: string
+          created_by: string | null
+          current_guarantor: string | null
+          current_offer: string | null
+          feedback: string | null
+          guarantor_type: Database["public"]["Enums"]["guarantor_type"] | null
+          id: string
+          last_interaction_date: string | null
+          main_contact: string | null
+          name: string
+          negotiation_status: Database["public"]["Enums"]["negotiation_status"]
+          next_steps: string | null
+          regional_director: string | null
+          state: string
+          total_interactions: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          c_level_support_needed?: boolean
+          city: string
+          consultant_id?: string | null
+          contact_role?: string | null
+          contract_stock?: number
+          created_at?: string
+          created_by?: string | null
+          current_guarantor?: string | null
+          current_offer?: string | null
+          feedback?: string | null
+          guarantor_type?: Database["public"]["Enums"]["guarantor_type"] | null
+          id?: string
+          last_interaction_date?: string | null
+          main_contact?: string | null
+          name: string
+          negotiation_status?: Database["public"]["Enums"]["negotiation_status"]
+          next_steps?: string | null
+          regional_director?: string | null
+          state: string
+          total_interactions?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          c_level_support_needed?: boolean
+          city?: string
+          consultant_id?: string | null
+          contact_role?: string | null
+          contract_stock?: number
+          created_at?: string
+          created_by?: string | null
+          current_guarantor?: string | null
+          current_offer?: string | null
+          feedback?: string | null
+          guarantor_type?: Database["public"]["Enums"]["guarantor_type"] | null
+          id?: string
+          last_interaction_date?: string | null
+          main_contact?: string | null
+          name?: string
+          negotiation_status?: Database["public"]["Enums"]["negotiation_status"]
+          next_steps?: string | null
+          regional_director?: string | null
+          state?: string
+          total_interactions?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "real_estate_agencies_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "consultants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          consultant_id: string | null
+          created_at: string
+          direction: Database["public"]["Enums"]["message_direction"]
+          id: string
+          message_body: string | null
+          parsed_intent: string | null
+          phone: string
+          raw_payload: Json | null
+        }
+        Insert: {
+          consultant_id?: string | null
+          created_at?: string
+          direction: Database["public"]["Enums"]["message_direction"]
+          id?: string
+          message_body?: string | null
+          parsed_intent?: string | null
+          phone: string
+          raw_payload?: Json | null
+        }
+        Update: {
+          consultant_id?: string | null
+          created_at?: string
+          direction?: Database["public"]["Enums"]["message_direction"]
+          id?: string
+          message_body?: string | null
+          parsed_intent?: string | null
+          phone?: string
+          raw_payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "consultants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "manager" | "consultant"
+      bot_session_status: "active" | "completed" | "abandoned"
+      guarantor_type:
+        | "Garantia Propria"
+        | "Concorrente"
+        | "Seguradora"
+        | "Outro"
+      message_direction: "inbound" | "outbound"
+      negotiation_status:
+        | "Pipeline de Prospecção"
+        | "Conversas iniciadas"
+        | "Reunião agendada"
+        | "Aguardando base"
+        | "Stand by"
+        | "Sem interesse"
+        | "Proposta enviada"
+        | "Em negociação"
+        | "Convertida"
+      update_source: "web" | "whatsapp" | "import"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +515,28 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "manager", "consultant"],
+      bot_session_status: ["active", "completed", "abandoned"],
+      guarantor_type: [
+        "Garantia Propria",
+        "Concorrente",
+        "Seguradora",
+        "Outro",
+      ],
+      message_direction: ["inbound", "outbound"],
+      negotiation_status: [
+        "Pipeline de Prospecção",
+        "Conversas iniciadas",
+        "Reunião agendada",
+        "Aguardando base",
+        "Stand by",
+        "Sem interesse",
+        "Proposta enviada",
+        "Em negociação",
+        "Convertida",
+      ],
+      update_source: ["web", "whatsapp", "import"],
+    },
   },
 } as const
