@@ -110,7 +110,7 @@ function DashboardPage() {
       <div className="p-6 lg:p-10 space-y-6">
         {/* KPI strip */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Carteira ativa" value={total} icon={<Building2 className="h-4 w-4" />} hint={`${stockTotal} contratos em jogo`} />
+          <StatCard label="Carteira ativa" value={total} icon={<Building2 className="h-4 w-4" />} hint="imobiliárias monitoradas" />
           <StatCard label="Em negociação" value={inNegotiation} icon={<Briefcase className="h-4 w-4" />} tone="info" hint="oportunidades vivas" />
           <StatCard label="Convertidas" value={converted} icon={<Target className="h-4 w-4" />} tone="success" hint={`${convertedStock} contratos fechados`} delta={{ value: `${convRate}%`, direction: "up" }} />
           <StatCard label="Risco de carteira" value={stale} icon={<AlertTriangle className="h-4 w-4" />} tone="warning" hint={`${cLevel} pedem C-Level`} delta={{ value: stale > 0 ? "atenção" : "ok", direction: stale > 0 ? "down" : "flat" }} />
@@ -154,23 +154,34 @@ function DashboardPage() {
             <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 font-display">
-                <Zap className="h-4 w-4 text-primary" /> Health score
+                <Zap className="h-4 w-4 text-primary" /> Contratos em jogo
               </CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">Saúde geral da carteira</p>
+              <p className="text-xs text-muted-foreground mt-1">Volume total de contratos na carteira</p>
             </CardHeader>
-            <CardContent className="h-64 flex items-center justify-center relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ value: healthScore }]} startAngle={220} endAngle={-40}>
-                  <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                  <RadialBar background={{ fill: "oklch(1 0 0 / 0.05)" }} dataKey="value" cornerRadius={20} fill="var(--primary)" />
-                </RadialBarChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <div className="font-display text-5xl font-semibold tabular-nums text-gradient-primary">{healthScore}</div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">índice</div>
+            <CardContent className="h-64 flex flex-col items-center justify-center relative gap-4">
+              <div className="flex flex-col items-center">
+                <div className="font-display text-6xl font-semibold tabular-nums text-gradient-primary leading-none">
+                  {stockTotal.toLocaleString("pt-BR")}
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-2">contratos</div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 w-full px-2 mt-2">
+                <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Fechados</div>
+                  <div className="font-display text-xl font-semibold tabular-nums text-success mt-1">
+                    {convertedStock.toLocaleString("pt-BR")}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Em disputa</div>
+                  <div className="font-display text-xl font-semibold tabular-nums text-primary mt-1">
+                    {(stockTotal - convertedStock).toLocaleString("pt-BR")}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
+
         </div>
 
         {/* Pipeline + Geo */}
