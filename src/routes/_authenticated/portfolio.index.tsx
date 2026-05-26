@@ -152,9 +152,6 @@ function PortfolioListPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="kanban">
-            <KanbanBoard agencies={filtered} isLoading={isLoading} />
-          </TabsContent>
         </Tabs>
       </div>
     </div>
