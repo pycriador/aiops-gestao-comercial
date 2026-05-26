@@ -99,7 +99,19 @@ function AgencyDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Próximos passos & feedback</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base">Próximos passos & feedback</CardTitle>
+              <EditAgencyDialog
+                agency={agency}
+                onSaved={() => {
+                  qc.invalidateQueries({ queryKey: ["agency", agencyId] });
+                  qc.invalidateQueries({ queryKey: ["agencies-list"] });
+                  qc.invalidateQueries({ queryKey: ["agencies-all"] });
+                }}
+                triggerLabel="Editar campos"
+                triggerVariant="ghost"
+              />
+            </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div>
                 <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Próximos passos</div>
@@ -252,7 +264,7 @@ function NewInteractionDialog({ agency, onSaved }: { agency: any; onSaved: () =>
   );
 }
 
-function EditAgencyDialog({ agency, onSaved }: { agency: any; onSaved: () => void }) {
+function EditAgencyDialog({ agency, onSaved, triggerLabel, triggerVariant }: { agency: any; onSaved: () => void; triggerLabel?: string; triggerVariant?: "default" | "outline" | "ghost" }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const { data: consultants = [] } = useQuery({
@@ -310,7 +322,7 @@ function EditAgencyDialog({ agency, onSaved }: { agency: any; onSaved: () => voi
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline"><Pencil className="h-4 w-4 mr-1" /> Editar</Button>
+        <Button variant={triggerVariant ?? "outline"} size="sm"><Pencil className="h-4 w-4 mr-1" /> {triggerLabel ?? "Editar"}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Editar imobiliária</DialogTitle></DialogHeader>
