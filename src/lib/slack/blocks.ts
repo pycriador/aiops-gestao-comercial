@@ -1,4 +1,4 @@
-import { NEGOTIATION_STATUSES, BR_STATES } from "@/lib/constants";
+import { NEGOTIATION_STATUSES, BR_STATES, GUARANTOR_TYPES } from "@/lib/constants";
 
 const option = (value: string, text?: string) => ({
   text: { type: "plain_text", text: text ?? value, emoji: true },
@@ -151,9 +151,15 @@ export function updateAgencyView(args: {
   };
 }
 
-export function newAgencyView() {
+export function newAgencyView(args?: {
+  consultants?: Array<{ id: string; name: string }>;
+}) {
   const statusOpts = NEGOTIATION_STATUSES.map((s) => option(s));
   const stateOpts = BR_STATES.map((s) => option(s));
+  const guarantorTypeOpts = GUARANTOR_TYPES.map((g) => option(g));
+  const consultantOpts = (args?.consultants ?? []).slice(0, 100).map((c) =>
+    option(c.id, c.name.slice(0, 75)),
+  );
   return {
     type: "modal",
     callback_id: "submit_new_agency",
@@ -164,7 +170,7 @@ export function newAgencyView() {
       {
         type: "input",
         block_id: "name",
-        label: { type: "plain_text", text: "Nome" },
+        label: { type: "plain_text", text: "Imobiliária" },
         element: { type: "plain_text_input", action_id: "v" },
       },
       {
@@ -181,6 +187,35 @@ export function newAgencyView() {
       },
       {
         type: "input",
+        block_id: "regional_director",
+        label: { type: "plain_text", text: "Diretor Regional" },
+        element: { type: "plain_text_input", action_id: "v" },
+      },
+      {
+        type: "input",
+        block_id: "status",
+        label: { type: "plain_text", text: "Status da Negociação" },
+        element: {
+          type: "static_select", action_id: "v",
+          initial_option: option("Pipeline de Prospecção"),
+          options: statusOpts,
+        },
+      },
+      ...(consultantOpts.length
+        ? [{
+            type: "input",
+            block_id: "consultant",
+            optional: true,
+            label: { type: "plain_text", text: "Consultor responsável" },
+            element: {
+              type: "static_select", action_id: "v",
+              placeholder: { type: "plain_text", text: "Selecione" },
+              options: consultantOpts,
+            },
+          }]
+        : []),
+      {
+        type: "input",
         block_id: "stock",
         optional: true,
         label: { type: "plain_text", text: "Estoque de contratos" },
@@ -188,28 +223,63 @@ export function newAgencyView() {
       },
       {
         type: "input",
-        block_id: "main_contact",
+        block_id: "guarantor",
         optional: true,
-        label: { type: "plain_text", text: "Contato principal" },
+        label: { type: "plain_text", text: "Garantidor" },
         element: { type: "plain_text_input", action_id: "v" },
       },
       {
         type: "input",
-        block_id: "status",
+        block_id: "guarantor_type",
         optional: true,
-        label: { type: "plain_text", text: "Status inicial" },
-        element: {
-          type: "static_select", action_id: "v",
-          initial_option: option("Pipeline de Prospecção"),
-          options: statusOpts,
-        },
+        label: { type: "plain_text", text: "Tipo de Garantidor" },
+        element: { type: "static_select", action_id: "v", options: guarantorTypeOpts },
+      },
+      {
+        type: "input",
+        block_id: "main_contact",
+        optional: true,
+        label: { type: "plain_text", text: "Contato Principal" },
+        element: { type: "plain_text_input", action_id: "v" },
+      },
+      {
+        type: "input",
+        block_id: "contact_role",
+        optional: true,
+        label: { type: "plain_text", text: "Cargo" },
+        element: { type: "plain_text_input", action_id: "v" },
       },
       {
         type: "input",
         block_id: "feedback",
         optional: true,
-        label: { type: "plain_text", text: "Contexto / primeira impressão" },
+        label: { type: "plain_text", text: "Feedback Recebido" },
         element: { type: "plain_text_input", action_id: "v", multiline: true },
+      },
+      {
+        type: "input",
+        block_id: "offer",
+        optional: true,
+        label: { type: "plain_text", text: "Proposta Atual" },
+        element: { type: "plain_text_input", action_id: "v" },
+      },
+      {
+        type: "input",
+        block_id: "next_steps",
+        optional: true,
+        label: { type: "plain_text", text: "Próximos Passos" },
+        element: { type: "plain_text_input", action_id: "v", multiline: true },
+      },
+      {
+        type: "actions",
+        block_id: "clevel",
+        elements: [
+          {
+            type: "checkboxes",
+            action_id: "v",
+            options: [option("yes", "🚨 Apoio C-Level Necessário")],
+          },
+        ],
       },
     ],
   };

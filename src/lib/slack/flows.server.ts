@@ -19,6 +19,16 @@ async function listAgenciesForConsultant(consultant: SlackConsultant) {
   return data ?? [];
 }
 
+async function listConsultantsForPicker() {
+  const { data } = await supabaseAdmin
+    .from("consultants")
+    .select("id, name, active")
+    .eq("active", true)
+    .order("name", { ascending: true })
+    .limit(100);
+  return (data ?? []).map((c: any) => ({ id: c.id, name: c.name }));
+}
+
 async function getAgency(id: string, consultant: SlackConsultant) {
   const privileged = await isPrivileged(consultant.user_id);
   const { data } = await supabaseAdmin
@@ -62,9 +72,11 @@ export async function handleCommand(args: {
       const items = await pendingsFor(consultant);
       return { response_type: "ephemeral", blocks: pendingsBlocks(items) };
     }
-    case "/nova-imobiliaria":
-      await slack.openView(args.trigger_id, newAgencyView());
+    case "/nova-imobiliaria": {
+      const consultants = await listConsultantsForPicker();
+      await slack.openView(args.trigger_id, newAgencyView({ consultants }));
       return { response_type: "ephemeral", text: "Abrindo cadastro…" };
+    }
     case "/atualizar": {
       const agencies = await listAgenciesForConsultant(consultant);
       await slack.openView(args.trigger_id, pickAgencyView({
@@ -132,9 +144,11 @@ export async function handleBlockAction(payload: any): Promise<void> {
       return;
     }
     case "create_agency":
-    case "menu_nova":
-      await slack.openView(trigger_id, newAgencyView());
+    case "menu_nova": {
+      const consultants = await listConsultantsForPicker();
+      await slack.openView(trigger_id, newAgencyView({ consultants }));
       return;
+    }
     case "update_agency":
     case "menu_atualizar":
     case "request_c_level_support":
@@ -231,19 +245,52 @@ export async function handleViewSubmission(payload: any): Promise<any> {
       name: values.name?.v?.value?.trim(),
       city: values.city?.v?.value?.trim(),
       state: values.state?.v?.selected_option?.value,
+      regional_director: values.regional_director?.v?.value?.trim() ?? null,
+      status: values.status?.v?.selected_option?.value,
+      consultant_id: values.consultant?.v?.selected_option?.value ?? consultant.id,
       stock: values.stock?.v?.value ? parseInt(values.stock.v.value, 10) : 0,
+      guarantor: values.guarantor?.v?.value ?? null,
+      guarantor_type: values.guarantor_type?.v?.selected_option?.value ?? null,
       main_contact: values.main_contact?.v?.value ?? null,
-      status: values.status?.v?.selected_option?.value ?? "Pipeline de Prospecção",
+      contact_role: values.contact_role?.v?.value ?? null,
       feedback: values.feedback?.v?.value ?? null,
+      offer: values.offer?.v?.value ?? null,
+      next_steps: values.next_steps?.v?.value ?? null,
+      clevel: !!values.clevel?.v?.selected_options?.length,
     };
-    if (!draft.name || !draft.city || !draft.state) {
-      return { response_action: "errors", errors: { name: !draft.name ? "Obrigatório." : undefined, city: !draft.city ? "Obrigatório." : undefined, state: !draft.state ? "Obrigatório." : undefined } as any };
+    const errors: Record<string, string> = {};
+    if (!draft.name) errors.name = "Obrigatório.";
+    if (!draft.city) errors.city = "Obrigatório.";
+    if (!draft.state) errors.state = "Obrigatório.";
+    if (!draft.regional_director) errors.regional_director = "Obrigatório.";
+    if (!draft.status) errors.status = "Obrigatório.";
+    if (Object.keys(errors).length) return { response_action: "errors", errors: errors as any };
+
+    // Dedupe: Imobiliária + Cidade + UF
+    const { data: dupes } = await supabaseAdmin
+      .from("real_estate_agencies")
+      .select("id, name, city, state")
+      .ilike("name", draft.name!)
+      .ilike("city", draft.city!)
+      .eq("state", draft.state!)
+      .limit(1);
+    if (dupes && dupes.length > 0) {
+      return {
+        response_action: "errors",
+        errors: { name: `Possível duplicidade: já existe "${dupes[0].name}" em ${dupes[0].city}/${dupes[0].state}.` } as any,
+      };
     }
+
     const summary = [
       `*${draft.name}* — ${draft.city}/${draft.state}`,
+      `*Diretor Regional:* ${draft.regional_director}`,
       `*Status:* ${draft.status} · *Estoque:* ${draft.stock}`,
-      draft.main_contact ? `*Contato:* ${draft.main_contact}` : null,
-      draft.feedback ? `*Contexto:* ${draft.feedback}` : null,
+      draft.guarantor_type ? `*Garantidor:* ${draft.guarantor_type}${draft.guarantor ? ` (${draft.guarantor})` : ""}` : null,
+      draft.main_contact ? `*Contato:* ${draft.main_contact}${draft.contact_role ? ` — ${draft.contact_role}` : ""}` : null,
+      draft.offer ? `*Proposta:* ${draft.offer}` : null,
+      draft.feedback ? `*Feedback:* ${draft.feedback}` : null,
+      draft.next_steps ? `*Próximos passos:* ${draft.next_steps}` : null,
+      draft.clevel ? `🚨 *Apoio C-Level solicitado*` : null,
     ].filter(Boolean) as string[];
 
     return {
@@ -302,15 +349,30 @@ export async function handleViewSubmission(payload: any): Promise<any> {
     }
     if (meta.kind === "new") {
       const { draft } = meta;
+      const now = new Date().toISOString();
+      const hasFeedback = !!(draft.feedback && String(draft.feedback).trim());
+      const hasNextSteps = !!(draft.next_steps && String(draft.next_steps).trim());
+
       const { data, error } = await supabaseAdmin
         .from("real_estate_agencies")
         .insert({
-          name: draft.name, city: draft.city, state: draft.state,
-          contract_stock: draft.stock ?? 0,
-          main_contact: draft.main_contact,
+          name: draft.name,
+          city: draft.city,
+          state: draft.state,
+          regional_director: draft.regional_director,
           negotiation_status: draft.status,
+          consultant_id: draft.consultant_id ?? consultant.id,
+          contract_stock: draft.stock ?? 0,
+          current_guarantor: draft.guarantor,
+          guarantor_type: draft.guarantor_type,
+          main_contact: draft.main_contact,
+          contact_role: draft.contact_role,
+          current_offer: draft.offer,
           feedback: draft.feedback,
-          consultant_id: consultant.id,
+          next_steps: draft.next_steps,
+          c_level_support_needed: !!draft.clevel,
+          last_interaction_date: hasFeedback || hasNextSteps ? now : null,
+          total_interactions: hasFeedback ? 1 : 0,
           created_by: consultant.user_id,
           updated_by: consultant.user_id,
         })
@@ -319,7 +381,43 @@ export async function handleViewSubmission(payload: any): Promise<any> {
       if (error) {
         return { response_action: "errors", errors: { name: error.message.slice(0, 150) } as any };
       }
-      await dmConsultant(slackUserId, `🆕 *${data.name}* cadastrada na sua carteira.`);
+
+      if (hasFeedback) {
+        // Insert history WITHOUT triggering the sync trigger duplicating fields:
+        // the agency was just created with these values; trigger will bump total_interactions to 2.
+        // To keep consistency, decrement total_interactions counter by resetting it after insert.
+        await supabaseAdmin.from("agency_interactions").insert({
+          agency_id: data.id,
+          created_by: consultant.user_id,
+          created_by_name: consultant.name,
+          interaction_type: "slack",
+          source: "web",
+          feedback: draft.feedback,
+          next_steps: draft.next_steps,
+          status_after: draft.status,
+          c_level_support_needed: !!draft.clevel,
+          current_offer: draft.offer,
+          contract_stock: draft.stock ?? 0,
+        });
+        // The trigger incremented total_interactions; normalize back to 1.
+        await supabaseAdmin
+          .from("real_estate_agencies")
+          .update({ total_interactions: 1 })
+          .eq("id", data.id);
+      }
+
+      await dmConsultant(
+        slackUserId,
+        [
+          `✅ *Nova imobiliária cadastrada com sucesso.*`,
+          `*Imobiliária:* ${data.name}`,
+          `*Cidade/UF:* ${draft.city}/${draft.state}`,
+          `*Status:* ${draft.status}`,
+          draft.feedback ? `*Feedback:* ${draft.feedback}` : null,
+          draft.next_steps ? `*Próximo passo:* ${draft.next_steps}` : null,
+          draft.clevel ? `*Apoio C-Level:* 🚨 Sim` : null,
+        ].filter(Boolean).join("\n"),
+      );
       return { response_action: "clear" };
     }
   }
