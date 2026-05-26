@@ -40,7 +40,16 @@ export async function handleCommand(args: {
   trigger_id: string;
   text: string;
 }): Promise<{ response_type?: string; text?: string; blocks?: any[] }> {
+  console.log(`[slack.flow] handleCommand start`, { command: args.command, user: args.slackUserId });
+
+  // /carteira responde imediatamente sem depender de DB ou API Slack — apenas mostra o menu.
+  if (args.command === "/carteira") {
+    return { response_type: "ephemeral", ...homeMenu() };
+  }
+
+  const tConsult = Date.now();
   const consultant = await resolveConsultant(args.slackUserId);
+  console.log(`[slack.flow] resolveConsultant ${Date.now() - tConsult}ms`, { found: !!consultant });
   if (!consultant) {
     return {
       response_type: "ephemeral",
@@ -49,8 +58,6 @@ export async function handleCommand(args: {
   }
 
   switch (args.command) {
-    case "/carteira":
-      return { response_type: "ephemeral", ...homeMenu() };
     case "/pendencias": {
       const items = await pendingsFor(consultant);
       return { response_type: "ephemeral", blocks: pendingsBlocks(items) };
@@ -69,6 +76,7 @@ export async function handleCommand(args: {
       return { response_type: "ephemeral", text: "Comando desconhecido." };
   }
 }
+
 
 async function pendingsFor(consultant: SlackConsultant) {
   const agencies = await listAgenciesForConsultant(consultant);
