@@ -1,4 +1,4 @@
-import { NEGOTIATION_STATUSES, GUARANTOR_TYPES, BR_STATES } from "@/lib/constants";
+import { NEGOTIATION_STATUSES, BR_STATES } from "@/lib/constants";
 
 const option = (value: string, text?: string) => ({
   text: { type: "plain_text", text: text ?? value, emoji: true },
