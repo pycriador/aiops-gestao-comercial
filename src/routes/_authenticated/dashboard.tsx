@@ -110,7 +110,7 @@ function DashboardPage() {
       <div className="p-6 lg:p-10 space-y-6">
         {/* KPI strip */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Carteira ativa" value={total} icon={<Building2 className="h-4 w-4" />} hint={`${stockTotal} contratos em jogo`} />
+          <StatCard label="Carteira ativa" value={total} icon={<Building2 className="h-4 w-4" />} hint="imobiliárias monitoradas" />
           <StatCard label="Em negociação" value={inNegotiation} icon={<Briefcase className="h-4 w-4" />} tone="info" hint="oportunidades vivas" />
           <StatCard label="Convertidas" value={converted} icon={<Target className="h-4 w-4" />} tone="success" hint={`${convertedStock} contratos fechados`} delta={{ value: `${convRate}%`, direction: "up" }} />
           <StatCard label="Risco de carteira" value={stale} icon={<AlertTriangle className="h-4 w-4" />} tone="warning" hint={`${cLevel} pedem C-Level`} delta={{ value: stale > 0 ? "atenção" : "ok", direction: stale > 0 ? "down" : "flat" }} />
