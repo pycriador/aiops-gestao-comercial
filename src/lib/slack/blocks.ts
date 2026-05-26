@@ -12,17 +12,19 @@ export function homeMenu() {
       { type: "section", text: { type: "mrkdwn", text: "Operação da sua carteira de imobiliárias. Escolha uma ação:" } },
       {
         type: "actions",
+        block_id: "main_menu",
         elements: [
-          { type: "button", text: { type: "plain_text", text: "📋 Pendências" }, action_id: "menu_pendencias", style: "primary" },
-          { type: "button", text: { type: "plain_text", text: "✏️ Atualizar imobiliária" }, action_id: "menu_atualizar" },
-          { type: "button", text: { type: "plain_text", text: "🆕 Nova imobiliária" }, action_id: "menu_nova" },
-          { type: "button", text: { type: "plain_text", text: "🚨 Apoio C-Level" }, action_id: "menu_clevel", style: "danger" },
+          { type: "button", text: { type: "plain_text", text: "📋 Pendências" }, action_id: "view_pending", style: "primary" },
+          { type: "button", text: { type: "plain_text", text: "✏️ Atualizar imobiliária" }, action_id: "update_agency" },
+          { type: "button", text: { type: "plain_text", text: "🆕 Nova imobiliária" }, action_id: "create_agency" },
+          { type: "button", text: { type: "plain_text", text: "🚨 Apoio C-Level" }, action_id: "request_c_level_support", style: "danger" },
         ],
       },
       { type: "context", elements: [{ type: "mrkdwn", text: "_Comandos rápidos: `/carteira` `/pendencias` `/atualizar` `/nova-imobiliaria`_" }] },
     ],
   };
 }
+
 
 export function pickAgencyView(args: {
   agencies: Array<{ id: string; name: string; city: string; state: string }>;
