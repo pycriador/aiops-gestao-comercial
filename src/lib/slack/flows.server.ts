@@ -219,19 +219,69 @@ export async function handleViewSubmission(payload: any): Promise<any> {
     const agency = await getAgency(agencyId, consultant);
     if (!agency) return { response_action: "errors", errors: { agency: "Imobiliária não encontrada na sua carteira." } };
 
-    if (meta.flow === "clevel") {
-      // direct: flag C-Level + post confirmation
-      await supabaseAdmin.from("real_estate_agencies").update({ c_level_support_needed: true }).eq("id", agencyId);
-      await supabaseAdmin.from("agency_interactions").insert({
-        agency_id: agencyId, created_by: consultant.user_id, created_by_name: consultant.name,
-        interaction_type: "slack", feedback: "Solicitou apoio C-Level via Slack.",
-        c_level_support_needed: true, source: "web",
-      });
-      await dmConsultant(slackUserId, `🚨 *Apoio C-Level* solicitado para *${agency.name}*. Gestor será notificado.`);
-      return { response_action: "clear" };
-    }
-
     return { response_action: "update", view: updateAgencyView({ agency, flow: meta.flow ?? "atualizar" }) };
+  }
+
+  if (callback_id === "submit_clevel") {
+    const agencyId = values.agency?.v?.selected_option?.value;
+    const reason = values.reason?.v?.value?.trim();
+    const urgency = values.urgency?.v?.selected_option?.value ?? "media";
+    const context = values.context?.v?.value?.trim() ?? "";
+    const errors: Record<string, string> = {};
+    if (!agencyId) errors.agency = "Selecione uma imobiliária.";
+    if (!reason) errors.reason = "Descreva o motivo do apoio.";
+    if (Object.keys(errors).length) return { response_action: "errors", errors: errors as any };
+
+    const agency = await getAgency(agencyId, consultant);
+    if (!agency) return { response_action: "errors", errors: { agency: "Imobiliária não encontrada na sua carteira." } as any };
+
+    const urgencyLabel = urgency === "alta" ? "🔴 Alta" : urgency === "baixa" ? "🟢 Baixa" : "🟡 Média";
+    const feedbackText = [
+      `🚨 Apoio C-Level solicitado via Slack`,
+      `Urgência: ${urgencyLabel}`,
+      `Motivo: ${reason}`,
+      context ? `Contexto: ${context}` : null,
+    ].filter(Boolean).join("\n");
+    const nextStepsText = `Apoio C-Level (${urgencyLabel}): ${reason}`;
+    const now = new Date().toISOString();
+
+    // 1. Update agency: flag C-Level, refresh interaction counters and next steps
+    await supabaseAdmin
+      .from("real_estate_agencies")
+      .update({
+        c_level_support_needed: true,
+        next_steps: nextStepsText,
+        last_interaction_date: now,
+        total_interactions: (agency.total_interactions ?? 0) + 1,
+        updated_by: consultant.user_id,
+      })
+      .eq("id", agencyId);
+
+    // 2. Append history entry
+    await supabaseAdmin.from("agency_interactions").insert({
+      agency_id: agencyId,
+      created_by: consultant.user_id,
+      created_by_name: consultant.name,
+      interaction_type: "slack",
+      source: "web",
+      feedback: feedbackText,
+      next_steps: nextStepsText,
+      c_level_support_needed: true,
+      status_after: agency.negotiation_status,
+      interaction_date: now,
+    });
+
+    await dmConsultant(
+      slackUserId,
+      [
+        `🚨 *Apoio C-Level solicitado*`,
+        `*Imobiliária:* ${agency.name} — ${agency.city}/${agency.state}`,
+        `*Urgência:* ${urgencyLabel}`,
+        `*Motivo:* ${reason}`,
+        context ? `*Contexto:* ${context}` : null,
+      ].filter(Boolean).join("\n"),
+    );
+    return { response_action: "clear" };
   }
 
   if (callback_id === "submit_update") {
