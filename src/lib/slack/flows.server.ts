@@ -103,30 +103,48 @@ export async function handleBlockAction(payload: any): Promise<void> {
   const action = payload.actions?.[0];
   if (!action) return;
   const consultant = await resolveConsultant(slackUserId);
-  if (!consultant) return;
+  if (!consultant) {
+    if (payload.response_url) {
+      await fetch(payload.response_url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          response_type: "ephemeral",
+          replace_original: false,
+          text: "Não encontrei seu e-mail Slack na base de consultores. Peça ao admin para te cadastrar.",
+        }),
+      });
+    }
+    return;
+  }
 
   switch (action.action_id) {
+    case "view_pending":
     case "menu_pendencias": {
       const items = await pendingsFor(consultant);
       if (payload.response_url) {
         await fetch(payload.response_url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ response_type: "ephemeral", replace_original: true, blocks: pendingsBlocks(items) }),
+          body: JSON.stringify({ response_type: "ephemeral", replace_original: false, blocks: pendingsBlocks(items) }),
         });
       }
       return;
     }
+    case "create_agency":
     case "menu_nova":
       await slack.openView(trigger_id, newAgencyView());
       return;
+    case "update_agency":
     case "menu_atualizar":
+    case "request_c_level_support":
     case "menu_clevel": {
       const agencies = await listAgenciesForConsultant(consultant);
+      const isClevel = action.action_id === "menu_clevel" || action.action_id === "request_c_level_support";
       await slack.openView(trigger_id, pickAgencyView({
         agencies,
-        flow: action.action_id === "menu_clevel" ? "clevel" : "atualizar",
-        title: action.action_id === "menu_clevel" ? "Apoio C-Level" : "Atualizar",
+        flow: isClevel ? "clevel" : "atualizar",
+        title: isClevel ? "Apoio C-Level" : "Atualizar",
         submitLabel: "Próximo",
       }));
       return;
@@ -265,7 +283,21 @@ export async function handleViewSubmission(payload: any): Promise<any> {
         current_offer: patch.offer ?? null,
         contract_stock: patch.stock ?? null,
       });
-      await dmConsultant(slackUserId, `✅ Atualização salva. Obrigado!`);
+      // 3. fetch agency name for summary
+      const { data: agencyRow } = await supabaseAdmin
+        .from("real_estate_agencies")
+        .select("name")
+        .eq("id", agency_id)
+        .maybeSingle();
+      const summaryLines = [
+        `✅ *Atualização registrada com sucesso.*`,
+        `*Imobiliária:* ${agencyRow?.name ?? "—"}`,
+        `*Novo status:* ${patch.status ?? "(mantido)"}`,
+        `*Feedback:* ${patch.feedback ?? "—"}`,
+        `*Próximo passo:* ${patch.next_steps ?? "—"}`,
+        `*Apoio C-Level:* ${patch.clevel ? "🚨 Sim" : "Não"}`,
+      ].join("\n");
+      await dmConsultant(slackUserId, summaryLines);
       return { response_action: "clear" };
     }
     if (meta.kind === "new") {

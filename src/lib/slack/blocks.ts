@@ -1,4 +1,4 @@
-import { NEGOTIATION_STATUSES, GUARANTOR_TYPES, BR_STATES } from "@/lib/constants";
+import { NEGOTIATION_STATUSES, BR_STATES } from "@/lib/constants";
 
 const option = (value: string, text?: string) => ({
   text: { type: "plain_text", text: text ?? value, emoji: true },
@@ -70,7 +70,6 @@ export function updateAgencyView(args: {
 }) {
   const { agency } = args;
   const statusOpts = NEGOTIATION_STATUSES.map((s) => option(s));
-  const guarantorOpts = GUARANTOR_TYPES.map((g) => option(g));
 
   return {
     type: "modal",
@@ -82,20 +81,44 @@ export function updateAgencyView(args: {
     blocks: [
       {
         type: "section",
-        text: { type: "mrkdwn", text: `*${agency.name}* — ${agency.city}/${agency.state}\nStatus atual: \`${agency.negotiation_status}\` · Estoque: *${agency.contract_stock}*` },
+        text: {
+          type: "mrkdwn",
+          text: `*${agency.name}* — ${agency.city}/${agency.state}\nStatus atual: \`${agency.negotiation_status}\` · Estoque: *${agency.contract_stock ?? 0}*`,
+        },
       },
       { type: "divider" },
       {
         type: "input",
         block_id: "status",
         optional: true,
-        label: { type: "plain_text", text: "Novo status" },
+        label: { type: "plain_text", text: "Status da negociação" },
         element: {
           type: "static_select",
           action_id: "v",
           initial_option: option(agency.negotiation_status),
           options: statusOpts,
         },
+      },
+      {
+        type: "input",
+        block_id: "feedback",
+        optional: true,
+        label: { type: "plain_text", text: "Feedback recebido" },
+        element: { type: "plain_text_input", action_id: "v", multiline: true },
+      },
+      {
+        type: "input",
+        block_id: "next_steps",
+        optional: true,
+        label: { type: "plain_text", text: "Próximos passos" },
+        element: { type: "plain_text_input", action_id: "v", multiline: true },
+      },
+      {
+        type: "input",
+        block_id: "offer",
+        optional: true,
+        label: { type: "plain_text", text: "Proposta atual" },
+        element: { type: "plain_text_input", action_id: "v", initial_value: agency.current_offer ?? "" },
       },
       {
         type: "input",
@@ -111,46 +134,6 @@ export function updateAgencyView(args: {
         },
       },
       {
-        type: "input",
-        block_id: "guarantor_type",
-        optional: true,
-        label: { type: "plain_text", text: "Tipo de garantidor atual" },
-        element: {
-          type: "static_select",
-          action_id: "v",
-          ...(agency.guarantor_type ? { initial_option: option(agency.guarantor_type) } : {}),
-          options: guarantorOpts,
-        },
-      },
-      {
-        type: "input",
-        block_id: "guarantor",
-        optional: true,
-        label: { type: "plain_text", text: "Garantidor atual (nome)" },
-        element: { type: "plain_text_input", action_id: "v", initial_value: agency.current_guarantor ?? "" },
-      },
-      {
-        type: "input",
-        block_id: "offer",
-        optional: true,
-        label: { type: "plain_text", text: "Oferta atual" },
-        element: { type: "plain_text_input", action_id: "v", initial_value: agency.current_offer ?? "" },
-      },
-      {
-        type: "input",
-        block_id: "feedback",
-        optional: true,
-        label: { type: "plain_text", text: "Feedback / contexto" },
-        element: { type: "plain_text_input", action_id: "v", multiline: true, initial_value: agency.feedback ?? "" },
-      },
-      {
-        type: "input",
-        block_id: "next_steps",
-        optional: true,
-        label: { type: "plain_text", text: "Próximos passos" },
-        element: { type: "plain_text_input", action_id: "v", multiline: true, initial_value: agency.next_steps ?? "" },
-      },
-      {
         type: "actions",
         block_id: "clevel",
         elements: [
@@ -158,9 +141,9 @@ export function updateAgencyView(args: {
             type: "checkboxes",
             action_id: "v",
             ...(agency.c_level_support_needed
-              ? { initial_options: [option("yes", "🚨 Precisa de apoio C-Level")] }
+              ? { initial_options: [option("yes", "🚨 Apoio C-Level necessário")] }
               : {}),
-            options: [option("yes", "🚨 Precisa de apoio C-Level")],
+            options: [option("yes", "🚨 Apoio C-Level necessário")],
           },
         ],
       },
