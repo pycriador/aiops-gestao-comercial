@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { inspectSlackSignature } from "@/lib/slack/verify.server";
+import { verifySlackSignature } from "@/lib/slack/verify.server";
+import { handleBlockAction, handleViewSubmission } from "@/lib/slack/flows.server";
 
 /**
- * Slack interactions — modo SYNC-DIRECT-ACTIONS.
- * Resposta síncrona direta no ACK, sem response_url, sem modal,
- * sem background, sem DB.
+ * Slack interactions endpoint.
+ * Handles block_actions (open modals) and view_submission (multi-step flows).
  */
 export const Route = createFileRoute("/api/public/slack/interactions")({
   server: {
     handlers: {
-      GET: async () => Response.json({ ok: true, version: "sync-direct-actions" }),
+      GET: async () =>
+        Response.json({ ok: true, version: "crm-modals-v1" }),
       POST: async ({ request }) => {
         const rid = Math.random().toString(36).slice(2, 8);
         const log = (msg: string, extra?: any) =>
@@ -20,74 +21,60 @@ export const Route = createFileRoute("/api/public/slack/interactions")({
           const secret = process.env.SLACK_SIGNING_SECRET;
           const ts = request.headers.get("x-slack-request-timestamp");
           const sig = request.headers.get("x-slack-signature");
-          const hmac = inspectSlackSignature(rawBody, ts, sig, secret);
-          log("hmac", { valid: hmac.valid, reason: hmac.reason });
+          const valid = secret ? verifySlackSignature(rawBody, ts, sig, secret) : false;
+          if (!valid) {
+            log("invalid signature");
+            return new Response("Invalid signature", { status: 401 });
+          }
 
           const params = new URLSearchParams(rawBody);
           const payloadStr = params.get("payload");
-          if (!payloadStr) {
-            log("missing payload");
-            return new Response("Missing payload", { status: 200 });
-          }
+          if (!payloadStr) return new Response("Missing payload", { status: 400 });
 
           const payload = JSON.parse(payloadStr);
           const type = payload.type;
-          const action = payload.actions?.[0];
-          const actionId: string | undefined = action?.action_id;
-          const blockId: string | undefined = action?.block_id;
-          const userId = payload.user?.id;
-
-          log("parsed", { type, actionId, blockId, userId, hmac_valid: hmac.valid });
-
-          const responseUrl: string | undefined = payload.response_url;
-          log("response_url", { present: !!responseUrl });
-
-          // Slack confirma o clique pelo ACK HTTP 200, mas para block_actions
-          // a mensagem visível deve ser enviada pelo response_url do payload.
-          let body: { response_type: "ephemeral"; text: string; replace_original: boolean };
-          switch (actionId) {
-            case "view_pending":
-              body = { response_type: "ephemeral", text: "Teste: botão Pendências acionado", replace_original: true };
-              break;
-            case "request_c_level_support":
-              body = { response_type: "ephemeral", text: "Teste: botão Apoio C-Level acionado", replace_original: true };
-              break;
-            case "update_agency":
-              body = { response_type: "ephemeral", text: "Teste: botão Atualizar acionado", replace_original: true };
-              break;
-            case "create_agency":
-              body = { response_type: "ephemeral", text: "Teste: botão Nova imobiliária acionado", replace_original: true };
-              break;
-            default:
-              body = { response_type: "ephemeral", text: `Ação desconhecida: ${actionId ?? "—"}`, replace_original: true };
-          }
-
-          if (!responseUrl) {
-            log("response_url missing; returning body fallback", body);
-            return Response.json(body, { status: 200 });
-          }
-
-          log("sending response_url", body);
-          const responseUrlRes = await fetch(responseUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json; charset=utf-8" },
-            body: JSON.stringify(body),
-          });
-          const responseUrlText = await responseUrlRes.text();
-          log("response_url result", {
-            ok: responseUrlRes.ok,
-            status: responseUrlRes.status,
-            body: responseUrlText.slice(0, 500),
+          log("payload", {
+            type,
+            action_id: payload.actions?.[0]?.action_id,
+            callback_id: payload.view?.callback_id,
+            user: payload.user?.id,
           });
 
-          log("ACK sent", { status: 200 });
+          if (type === "block_actions") {
+            // Must call views.open within 3s using trigger_id; do work inline.
+            try {
+              await handleBlockAction(payload);
+            } catch (err: any) {
+              console.error(`[slack.interactions ${rid}] block_actions error`, err?.stack ?? err);
+              if (payload.response_url) {
+                await fetch(payload.response_url, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    response_type: "ephemeral",
+                    replace_original: false,
+                    text: `Erro ao processar ação: ${err?.message ?? "interno"}`,
+                  }),
+                });
+              }
+            }
+            return new Response(null, { status: 200 });
+          }
+
+          if (type === "view_submission") {
+            const result = await handleViewSubmission(payload);
+            return Response.json(result ?? { response_action: "clear" });
+          }
+
+          if (type === "view_closed") {
+            return new Response(null, { status: 200 });
+          }
+
+          log("unhandled type", { type });
           return new Response(null, { status: 200 });
         } catch (err: any) {
-          console.error(`[slack.interactions ${rid}] error`, err?.stack ?? err);
-          return Response.json(
-            { text: `Erro: ${err?.message ?? "interno"}`, replace_original: false },
-            { status: 200 },
-          );
+          console.error(`[slack.interactions ${rid}] fatal`, err?.stack ?? err);
+          return new Response(null, { status: 200 });
         }
       },
     },
