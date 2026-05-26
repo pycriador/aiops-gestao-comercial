@@ -251,3 +251,132 @@ function NewInteractionDialog({ agency, onSaved }: { agency: any; onSaved: () =>
     </Dialog>
   );
 }
+
+function EditAgencyDialog({ agency, onSaved }: { agency: any; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { data: consultants = [] } = useQuery({
+    queryKey: ["consultants-active"],
+    queryFn: async () => {
+      const { data } = await supabase.from("consultants").select("id, name").eq("active", true).order("name");
+      return data ?? [];
+    },
+  });
+  const [form, setForm] = useState({
+    name: agency.name ?? "",
+    city: agency.city ?? "",
+    state: agency.state ?? "SP",
+    negotiation_status: agency.negotiation_status,
+    main_contact: agency.main_contact ?? "",
+    contact_role: agency.contact_role ?? "",
+    regional_director: agency.regional_director ?? "",
+    current_guarantor: agency.current_guarantor ?? "",
+    guarantor_type: (agency.guarantor_type ?? "") as string,
+    contract_stock: agency.contract_stock ?? 0,
+    current_offer: agency.current_offer ?? "",
+    next_steps: agency.next_steps ?? "",
+    feedback: agency.feedback ?? "",
+    consultant_id: (agency.consultant_id ?? "") as string,
+    c_level_support_needed: agency.c_level_support_needed ?? false,
+  });
+  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    if (!form.name || !form.city || !form.state) {
+      toast.error("Nome, cidade e UF são obrigatórios");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const payload: any = {
+        ...form,
+        guarantor_type: form.guarantor_type || null,
+        consultant_id: form.consultant_id || null,
+        updated_by: user?.id,
+      };
+      const { error } = await supabase.from("real_estate_agencies").update(payload).eq("id", agency.id);
+      if (error) throw error;
+      toast.success("Imobiliária atualizada");
+      setOpen(false);
+      onSaved();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline"><Pencil className="h-4 w-4 mr-1" /> Editar</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Editar imobiliária</DialogTitle></DialogHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <EField label="Nome *"><Input value={form.name} onChange={(e) => set("name", e.target.value)} /></EField>
+          <EField label="Status">
+            <Select value={form.negotiation_status} onValueChange={(v) => set("negotiation_status", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{NEGOTIATION_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+          </EField>
+          <EField label="Cidade *"><Input value={form.city} onChange={(e) => set("city", e.target.value)} /></EField>
+          <EField label="UF *">
+            <Select value={form.state} onValueChange={(v) => set("state", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{BR_STATES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+          </EField>
+          <EField label="Contato principal"><Input value={form.main_contact} onChange={(e) => set("main_contact", e.target.value)} /></EField>
+          <EField label="Cargo"><Input value={form.contact_role} onChange={(e) => set("contact_role", e.target.value)} /></EField>
+          <EField label="Diretor regional"><Input value={form.regional_director} onChange={(e) => set("regional_director", e.target.value)} /></EField>
+          <EField label="Consultor responsável">
+            <Select value={form.consultant_id || "none"} onValueChange={(v) => set("consultant_id", v === "none" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Sem consultor —</SelectItem>
+                {consultants.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </EField>
+          <EField label="Garantidor atual"><Input value={form.current_guarantor} onChange={(e) => set("current_guarantor", e.target.value)} /></EField>
+          <EField label="Tipo de garantia">
+            <Select value={form.guarantor_type || "none"} onValueChange={(v) => set("guarantor_type", v === "none" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Não informado —</SelectItem>
+                {GUARANTOR_TYPES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </EField>
+          <EField label="Estoque de contratos"><Input type="number" min={0} value={form.contract_stock} onChange={(e) => set("contract_stock", parseInt(e.target.value) || 0)} /></EField>
+          <EField label="Oferta atual"><Input value={form.current_offer} onChange={(e) => set("current_offer", e.target.value)} /></EField>
+          <EField label="Próximos passos" full><Textarea rows={2} value={form.next_steps} onChange={(e) => set("next_steps", e.target.value)} /></EField>
+          <EField label="Feedback / Observações" full><Textarea rows={3} value={form.feedback} onChange={(e) => set("feedback", e.target.value)} /></EField>
+          <EField label="Suporte C-Level necessário" full>
+            <div className="flex items-center gap-3">
+              <Switch checked={form.c_level_support_needed} onCheckedChange={(v) => set("c_level_support_needed", v)} />
+              <span className="text-sm text-muted-foreground">Marcar para escalonar diretoria</span>
+            </div>
+          </EField>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={submit} disabled={saving}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EField({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
+  return (
+    <div className={full ? "md:col-span-2 space-y-1.5" : "space-y-1.5"}>
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
+      {children}
+    </div>
+  );
+}
+
