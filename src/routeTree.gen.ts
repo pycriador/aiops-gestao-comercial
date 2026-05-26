@@ -25,6 +25,7 @@ import { Route as AuthenticatedPortfolioNewRouteImport } from './routes/_authent
 import { Route as AuthenticatedPortfolioAgencyIdRouteImport } from './routes/_authenticated/portfolio.$agencyId'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
 import { Route as ApiPublicSlackInteractionsRouteImport } from './routes/api/public/slack.interactions'
+import { Route as ApiPublicSlackHealthRouteImport } from './routes/api/public/slack.health'
 import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack.events'
 import { Route as ApiPublicSlackCronRouteImport } from './routes/api/public/slack.cron'
 import { Route as ApiPublicSlackCommandsRouteImport } from './routes/api/public/slack.commands'
@@ -117,6 +118,11 @@ const ApiPublicSlackInteractionsRoute =
     path: '/api/public/slack/interactions',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSlackHealthRoute = ApiPublicSlackHealthRouteImport.update({
+  id: '/api/public/slack/health',
+  path: '/api/public/slack/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSlackEventsRoute = ApiPublicSlackEventsRouteImport.update({
   id: '/api/public/slack/events',
   path: '/api/public/slack/events',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/api/public/slack/commands': typeof ApiPublicSlackCommandsRoute
   '/api/public/slack/cron': typeof ApiPublicSlackCronRoute
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
+  '/api/public/slack/health': typeof ApiPublicSlackHealthRoute
   '/api/public/slack/interactions': typeof ApiPublicSlackInteractionsRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/api/public/slack/commands': typeof ApiPublicSlackCommandsRoute
   '/api/public/slack/cron': typeof ApiPublicSlackCronRoute
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
+  '/api/public/slack/health': typeof ApiPublicSlackHealthRoute
   '/api/public/slack/interactions': typeof ApiPublicSlackInteractionsRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/api/public/slack/commands': typeof ApiPublicSlackCommandsRoute
   '/api/public/slack/cron': typeof ApiPublicSlackCronRoute
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
+  '/api/public/slack/health': typeof ApiPublicSlackHealthRoute
   '/api/public/slack/interactions': typeof ApiPublicSlackInteractionsRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/api/public/slack/commands'
     | '/api/public/slack/cron'
     | '/api/public/slack/events'
+    | '/api/public/slack/health'
     | '/api/public/slack/interactions'
     | '/api/public/whatsapp/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/api/public/slack/commands'
     | '/api/public/slack/cron'
     | '/api/public/slack/events'
+    | '/api/public/slack/health'
     | '/api/public/slack/interactions'
     | '/api/public/whatsapp/webhook'
   id:
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/api/public/slack/commands'
     | '/api/public/slack/cron'
     | '/api/public/slack/events'
+    | '/api/public/slack/health'
     | '/api/public/slack/interactions'
     | '/api/public/whatsapp/webhook'
   fileRoutesById: FileRoutesById
@@ -264,6 +276,7 @@ export interface RootRouteChildren {
   ApiPublicSlackCommandsRoute: typeof ApiPublicSlackCommandsRoute
   ApiPublicSlackCronRoute: typeof ApiPublicSlackCronRoute
   ApiPublicSlackEventsRoute: typeof ApiPublicSlackEventsRoute
+  ApiPublicSlackHealthRoute: typeof ApiPublicSlackHealthRoute
   ApiPublicSlackInteractionsRoute: typeof ApiPublicSlackInteractionsRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
@@ -382,6 +395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSlackInteractionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/slack/health': {
+      id: '/api/public/slack/health'
+      path: '/api/public/slack/health'
+      fullPath: '/api/public/slack/health'
+      preLoaderRoute: typeof ApiPublicSlackHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/slack/events': {
       id: '/api/public/slack/events'
       path: '/api/public/slack/events'
@@ -456,6 +476,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSlackCommandsRoute: ApiPublicSlackCommandsRoute,
   ApiPublicSlackCronRoute: ApiPublicSlackCronRoute,
   ApiPublicSlackEventsRoute: ApiPublicSlackEventsRoute,
+  ApiPublicSlackHealthRoute: ApiPublicSlackHealthRoute,
   ApiPublicSlackInteractionsRoute: ApiPublicSlackInteractionsRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
