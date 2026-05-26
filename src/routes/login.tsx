@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Building2 } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -66,11 +66,11 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/20 px-4">
       <Card className="w-full max-w-md shadow-xl border-border/60">
         <CardHeader className="text-center space-y-3">
-          <div className="mx-auto h-12 w-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center">
-            <Building2 className="h-6 w-6" />
+          <div className="mx-auto h-14 w-14 rounded-2xl bg-background border border-border flex items-center justify-center p-2.5">
+            <Logo />
           </div>
           <div>
-            <CardTitle className="text-2xl">Gestão de Carteira</CardTitle>
+            <CardTitle className="text-2xl">Loft · Gestão de Carteira</CardTitle>
             <CardDescription>Acesso restrito · Targets & Portabilidade</CardDescription>
           </div>
         </CardHeader>
