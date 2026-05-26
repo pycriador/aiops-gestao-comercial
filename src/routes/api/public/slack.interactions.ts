@@ -39,29 +39,49 @@ export const Route = createFileRoute("/api/public/slack/interactions")({
 
           log("parsed", { type, actionId, blockId, userId, hmac_valid: hmac.valid });
 
-          // IMPORTANT: para block_actions, a resposta síncrona substitui a
-          // mensagem original. Sem replace_original=true o Slack descarta o
-          // text e nada aparece na UI (foi o sintoma "nada acontece").
-          let body: { text: string; replace_original: boolean };
+          const responseUrl: string | undefined = payload.response_url;
+          log("response_url", { present: !!responseUrl });
+
+          // Slack confirma o clique pelo ACK HTTP 200, mas para block_actions
+          // a mensagem visível deve ser enviada pelo response_url do payload.
+          let body: { response_type: "ephemeral"; text: string; replace_original: boolean };
           switch (actionId) {
             case "view_pending":
-              body = { text: "Teste: botão Pendências acionado", replace_original: true };
+              body = { response_type: "ephemeral", text: "Teste: botão Pendências acionado", replace_original: true };
               break;
             case "request_c_level_support":
-              body = { text: "Teste: botão Apoio C-Level acionado", replace_original: true };
+              body = { response_type: "ephemeral", text: "Teste: botão Apoio C-Level acionado", replace_original: true };
               break;
             case "update_agency":
-              body = { text: "Teste: botão Atualizar acionado", replace_original: true };
+              body = { response_type: "ephemeral", text: "Teste: botão Atualizar acionado", replace_original: true };
               break;
             case "create_agency":
-              body = { text: "Teste: botão Nova imobiliária acionado", replace_original: true };
+              body = { response_type: "ephemeral", text: "Teste: botão Nova imobiliária acionado", replace_original: true };
               break;
             default:
-              body = { text: `Ação desconhecida: ${actionId ?? "—"}`, replace_original: true };
+              body = { response_type: "ephemeral", text: `Ação desconhecida: ${actionId ?? "—"}`, replace_original: true };
           }
 
-          log("response sent", body);
-          return Response.json(body, { status: 200 });
+          if (!responseUrl) {
+            log("response_url missing; returning body fallback", body);
+            return Response.json(body, { status: 200 });
+          }
+
+          log("sending response_url", body);
+          const responseUrlRes = await fetch(responseUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+            body: JSON.stringify(body),
+          });
+          const responseUrlText = await responseUrlRes.text();
+          log("response_url result", {
+            ok: responseUrlRes.ok,
+            status: responseUrlRes.status,
+            body: responseUrlText.slice(0, 500),
+          });
+
+          log("ACK sent", { status: 200 });
+          return new Response(null, { status: 200 });
         } catch (err: any) {
           console.error(`[slack.interactions ${rid}] error`, err?.stack ?? err);
           return Response.json(
