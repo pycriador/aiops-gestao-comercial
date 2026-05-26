@@ -151,10 +151,10 @@ function SlackSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
             {diagnostics?.environment !== "production" && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-                <div className="font-medium">Endpoint público de produção ainda não está ativo.</div>
-                <div className="mt-1 text-xs">
-                  O Slack não consegue chamar a URL de preview/dev porque ela redireciona para autenticação. Publique o app e use exatamente a URL de produção abaixo no manifest.
+              <div className="rounded-lg border border-border bg-muted/30 p-4 text-xs text-muted-foreground">
+                <div className="font-medium text-foreground">Você está visualizando o painel em preview/dev.</div>
+                <div className="mt-1">
+                  Isto não afeta o Slack — ele chama a URL pública de produção <code>{SLACK_URLS.commands}</code>. Use esta URL no manifest do app.
                 </div>
               </div>
             )}

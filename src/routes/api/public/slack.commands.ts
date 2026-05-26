@@ -140,56 +140,55 @@ export const Route = createFileRoute("/api/public/slack/commands")({
             }, { status: 200 });
           }
 
-          if (command === "/carteira") {
-            const reply = await handleCommand({ command, slackUserId, channelId, trigger_id, text });
-            const ack = { status: 200, durationMs: Date.now() - t0, mode: "immediate_json" };
-            queueBackground(recordDiagnostic({
-              status: diagnosticBypass ? "diagnostic_test_ack_sent" : "ack_sent",
-              command,
-              slackUserId,
-              teamId,
-              channelId,
-              payload: diagnosticPayload,
-              response: { ack, replyPreview: { hasText: !!reply.text, blocks: reply.blocks?.length ?? 0 } },
-            }));
-            log("ACK sent", ack);
-            return Response.json(reply, { status: 200 });
-          }
-
-          // processa em background — não awaitamos, garantindo ACK <3s
+          // processa em background — não awaitamos, garantindo ACK <3s.
+          // Para /carteira o handler não depende de DB/consultor/Slack, apenas retorna o menu estático.
           queueBackground((async () => {
             const b0 = Date.now();
+            log("background start", { command, has_response_url: !!response_url });
             try {
               const reply = await handleCommand({ command, slackUserId, channelId, trigger_id, text });
-              console.log(`[slack.commands ${rid}] handler done in ${Date.now() - b0}ms`);
-              await recordDiagnostic({
-                status: diagnosticBypass ? "diagnostic_test_ack_sent" : "ack_sent",
-                command,
-                slackUserId,
-                teamId,
-                channelId,
-                payload: diagnosticPayload,
-                response: { ack: { status: 200, durationMs: Date.now() - t0, mode: "async_response_url" }, handlerMs: Date.now() - b0 },
-              });
-              if (response_url && reply && (reply.text || reply.blocks)) {
-                const r = await fetch(response_url, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ replace_original: false, ...reply }),
+              log("handler done", { ms: Date.now() - b0, hasText: !!reply.text, blocks: reply.blocks?.length ?? 0 });
+
+              if (!response_url) {
+                log("response_url ausente — não há como enviar resposta final");
+                await recordDiagnostic({
+                  status: "missing_response_url",
+                  command, slackUserId, teamId, channelId,
+                  payload: diagnosticPayload,
+                  response: { ack: { status: 200, durationMs: Date.now() - t0, mode: "async_ack" }, handlerMs: Date.now() - b0 },
+                  errorMessage: "response_url ausente no payload do Slack",
                 });
-                console.log(`[slack.commands ${rid}] response_url posted`, { status: r.status });
+                return;
               }
+
+              log("posting to response_url", { preview: response_url.slice(0, 60) + "…" });
+              const r = await fetch(response_url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ response_type: "ephemeral", replace_original: true, ...reply }),
+              });
+              const respBody = await r.text();
+              log("response_url result", { status: r.status, ok: r.ok, body: respBody.slice(0, 200) });
+
+              await recordDiagnostic({
+                status: r.ok ? (diagnosticBypass ? "diagnostic_test_response_url_ok" : "response_url_ok") : "response_url_failed",
+                command, slackUserId, teamId, channelId,
+                payload: diagnosticPayload,
+                response: {
+                  ack: { status: 200, durationMs: Date.now() - t0, mode: "async_ack" },
+                  handlerMs: Date.now() - b0,
+                  response_url_post: { status: r.status, ok: r.ok, body: respBody.slice(0, 500) },
+                },
+                errorMessage: r.ok ? undefined : `response_url POST status ${r.status}: ${respBody.slice(0, 300)}`,
+              });
             } catch (err: any) {
               console.error(`[slack.commands ${rid}] handler error`, err?.stack ?? err);
               await recordDiagnostic({
-                status: "handler_error_ack_sent",
-                command,
-                slackUserId,
-                teamId,
-                channelId,
+                status: "handler_error",
+                command, slackUserId, teamId, channelId,
                 payload: diagnosticPayload,
-                response: { ack: { status: 200, durationMs: Date.now() - t0, mode: "async_error" } },
-                errorMessage: err?.message ?? "internal_error",
+                response: { ack: { status: 200, durationMs: Date.now() - t0, mode: "async_ack" } },
+                errorMessage: `${err?.message ?? "internal_error"}\n${err?.stack ?? ""}`.slice(0, 1500),
               });
               if (response_url) {
                 await fetch(response_url, {
@@ -199,7 +198,7 @@ export const Route = createFileRoute("/api/public/slack/commands")({
                     response_type: "ephemeral",
                     text: `❌ Erro: ${err?.message ?? "interno"}`,
                   }),
-                }).catch(() => {});
+                }).catch((e) => console.error(`[slack.commands ${rid}] response_url error post failed`, e));
               }
             }
           })());
