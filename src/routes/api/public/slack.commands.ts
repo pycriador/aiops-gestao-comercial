@@ -17,6 +17,15 @@ import { slackRuntimeEnvironment } from "@/lib/slack/constants";
 export const Route = createFileRoute("/api/public/slack/commands")({
   server: {
     handlers: {
+      GET: async ({ request }) => Response.json({
+        ok: true,
+        service: "slack.commands",
+        method: "GET",
+        url: request.url,
+        environment: slackRuntimeEnvironment(request.url),
+        hasBotToken: !!process.env.SLACK_BOT_TOKEN,
+        hasSigningSecret: !!process.env.SLACK_SIGNING_SECRET,
+      }),
       POST: async ({ request }) => {
         const t0 = Date.now();
         const rid = Math.random().toString(36).slice(2, 8);
