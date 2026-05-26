@@ -349,15 +349,30 @@ export async function handleViewSubmission(payload: any): Promise<any> {
     }
     if (meta.kind === "new") {
       const { draft } = meta;
+      const now = new Date().toISOString();
+      const hasFeedback = !!(draft.feedback && String(draft.feedback).trim());
+      const hasNextSteps = !!(draft.next_steps && String(draft.next_steps).trim());
+
       const { data, error } = await supabaseAdmin
         .from("real_estate_agencies")
         .insert({
-          name: draft.name, city: draft.city, state: draft.state,
-          contract_stock: draft.stock ?? 0,
-          main_contact: draft.main_contact,
+          name: draft.name,
+          city: draft.city,
+          state: draft.state,
+          regional_director: draft.regional_director,
           negotiation_status: draft.status,
+          consultant_id: draft.consultant_id ?? consultant.id,
+          contract_stock: draft.stock ?? 0,
+          current_guarantor: draft.guarantor,
+          guarantor_type: draft.guarantor_type,
+          main_contact: draft.main_contact,
+          contact_role: draft.contact_role,
+          current_offer: draft.offer,
           feedback: draft.feedback,
-          consultant_id: consultant.id,
+          next_steps: draft.next_steps,
+          c_level_support_needed: !!draft.clevel,
+          last_interaction_date: hasFeedback || hasNextSteps ? now : null,
+          total_interactions: hasFeedback ? 1 : 0,
           created_by: consultant.user_id,
           updated_by: consultant.user_id,
         })
@@ -366,7 +381,43 @@ export async function handleViewSubmission(payload: any): Promise<any> {
       if (error) {
         return { response_action: "errors", errors: { name: error.message.slice(0, 150) } as any };
       }
-      await dmConsultant(slackUserId, `🆕 *${data.name}* cadastrada na sua carteira.`);
+
+      if (hasFeedback) {
+        // Insert history WITHOUT triggering the sync trigger duplicating fields:
+        // the agency was just created with these values; trigger will bump total_interactions to 2.
+        // To keep consistency, decrement total_interactions counter by resetting it after insert.
+        await supabaseAdmin.from("agency_interactions").insert({
+          agency_id: data.id,
+          created_by: consultant.user_id,
+          created_by_name: consultant.name,
+          interaction_type: "slack",
+          source: "web",
+          feedback: draft.feedback,
+          next_steps: draft.next_steps,
+          status_after: draft.status,
+          c_level_support_needed: !!draft.clevel,
+          current_offer: draft.offer,
+          contract_stock: draft.stock ?? 0,
+        });
+        // The trigger incremented total_interactions; normalize back to 1.
+        await supabaseAdmin
+          .from("real_estate_agencies")
+          .update({ total_interactions: 1 })
+          .eq("id", data.id);
+      }
+
+      await dmConsultant(
+        slackUserId,
+        [
+          `✅ *Nova imobiliária cadastrada com sucesso.*`,
+          `*Imobiliária:* ${data.name}`,
+          `*Cidade/UF:* ${draft.city}/${draft.state}`,
+          `*Status:* ${draft.status}`,
+          draft.feedback ? `*Feedback:* ${draft.feedback}` : null,
+          draft.next_steps ? `*Próximo passo:* ${draft.next_steps}` : null,
+          draft.clevel ? `*Apoio C-Level:* 🚨 Sim` : null,
+        ].filter(Boolean).join("\n"),
+      );
       return { response_action: "clear" };
     }
   }
