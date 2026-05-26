@@ -90,6 +90,13 @@ export async function handleCommand(args: {
 }
 
 
+const STALE_STATUSES = new Set([
+  "Reunião agendada",
+  "Aguardando base",
+  "Proposta enviada",
+  "Em negociação",
+]);
+
 async function pendingsFor(consultant: SlackConsultant) {
   const agencies = await listAgenciesForConsultant(consultant);
   const items = agencies
@@ -99,11 +106,31 @@ async function pendingsFor(consultant: SlackConsultant) {
       city: a.city,
       state: a.state,
       status: a.negotiation_status,
+      stock: a.contract_stock ?? 0,
+      next_steps: a.next_steps ?? null,
       clevel: !!a.c_level_support_needed,
       days: daysSince(a.last_interaction_date),
+      last_interaction_date: a.last_interaction_date ?? null,
     }))
-    .filter((a) => a.clevel || a.days === null || (a.days ?? 0) >= 15)
-    .sort((a, b) => (b.clevel ? 1 : 0) - (a.clevel ? 1 : 0) || ((b.days ?? 999) - (a.days ?? 999)));
+    .filter((a) => {
+      const noInteraction = a.days === null;
+      const stale = (a.days ?? 0) > 15;
+      const clevel = a.clevel;
+      const noNextSteps = !a.next_steps || !String(a.next_steps).trim();
+      const staleStatus = STALE_STATUSES.has(a.status) && (a.days === null || (a.days ?? 0) > 15);
+      return noInteraction || stale || clevel || noNextSteps || staleStatus;
+    })
+    .sort((a, b) => {
+      // 1. C-Level first
+      if (a.clevel !== b.clevel) return a.clevel ? -1 : 1;
+      // 2. Higher stock first
+      if (b.stock !== a.stock) return b.stock - a.stock;
+      // 3. More days without update first (null = never = highest)
+      const da = a.days ?? Number.MAX_SAFE_INTEGER;
+      const db = b.days ?? Number.MAX_SAFE_INTEGER;
+      return db - da;
+    })
+    .slice(0, 10);
   return items;
 }
 

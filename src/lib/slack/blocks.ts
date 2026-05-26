@@ -301,19 +301,42 @@ export function confirmView(args: { title: string; summaryLines: string[]; priva
   };
 }
 
-export function pendingsBlocks(items: Array<{ id: string; name: string; city: string; state: string; days: number | null; status: string; clevel: boolean }>) {
+export function pendingsBlocks(items: Array<{
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+  days: number | null;
+  status: string;
+  stock: number;
+  next_steps: string | null;
+  clevel: boolean;
+  last_interaction_date: string | null;
+}>) {
   if (!items.length) {
     return [{ type: "section", text: { type: "mrkdwn", text: "✅ *Tudo em dia.* Nenhuma pendência crítica agora." } }];
   }
+  const fmtDate = (iso: string | null, days: number | null) => {
+    if (!iso) return "_sem interação_";
+    const d = new Date(iso);
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    return `${dd}/${mm}/${d.getFullYear()} (${days}d)`;
+  };
   return [
     { type: "section", text: { type: "mrkdwn", text: `*Pendências da sua carteira* (${items.length})` } },
     { type: "divider" },
-    ...items.slice(0, 15).flatMap((it) => [
+    ...items.slice(0, 10).flatMap((it) => [
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*${it.name}* — ${it.city}/${it.state}\n_Status:_ \`${it.status}\` · ${it.days === null ? "_sem interação_" : `*${it.days}d* sem update`}${it.clevel ? " · 🚨 C-Level" : ""}`,
+          text: [
+            `*${it.name}* — ${it.city}/${it.state}${it.clevel ? " · 🚨 *C-Level*" : ""}`,
+            `_Status:_ \`${it.status}\` · _Estoque:_ *${it.stock}*`,
+            `_Última interação:_ ${fmtDate(it.last_interaction_date, it.days)}`,
+            `_Próximo passo:_ ${it.next_steps?.trim() ? it.next_steps : "_não definido_"}`,
+          ].join("\n"),
         },
         accessory: {
           type: "button",
