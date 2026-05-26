@@ -1,8 +1,9 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { Building2, LayoutDashboard, Briefcase, Upload, Settings, LogOut, Users, MessageSquare, Activity } from "lucide-react";
+import { LayoutDashboard, Briefcase, Upload, Settings, LogOut, Users, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -45,11 +46,11 @@ function AuthedLayout() {
         <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-primary/30 to-transparent" />
 
         <div className="h-16 flex items-center gap-3 px-5 border-b border-sidebar-border">
-          <div className="relative h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center glow-primary">
-            <Building2 className="h-4.5 w-4.5 text-primary-foreground" />
+          <div className="relative h-9 w-9 rounded-xl bg-background/60 border border-border/60 flex items-center justify-center p-1.5">
+            <Logo />
           </div>
           <div className="leading-tight">
-            <div className="font-display font-semibold text-sm tracking-tight">Carteira OS</div>
+            <div className="font-display font-semibold text-sm tracking-tight">Loft</div>
             <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/80 flex items-center gap-1">
               <span className="h-1 w-1 rounded-full bg-success animate-pulse" /> live
             </div>
