@@ -149,7 +149,16 @@ function SlackSettingsPage() {
               Testar endpoint /commands
             </Button>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+          <CardContent className="space-y-4 text-sm">
+            {diagnostics?.environment !== "production" && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                <div className="font-medium">Endpoint público de produção ainda não está ativo.</div>
+                <div className="mt-1 text-xs">
+                  O Slack não consegue chamar a URL de preview/dev porque ela redireciona para autenticação. Publique o app e use exatamente a URL de produção abaixo no manifest.
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-4">
               <div className="font-medium">Última requisição recebida</div>
               <div className="text-xs text-muted-foreground">Timestamp: {last ? new Date(last.created_at).toLocaleString("pt-BR") : "—"}</div>
@@ -188,6 +197,8 @@ function SlackSettingsPage() {
                 {diagnostics?.manifestUrlMatchesProduction ? "URL de produção correta" : "URL divergente"}
               </Badge>
               <div className="text-xs text-muted-foreground">Health: <code>{URLS.health}</code></div>
+              <div className="text-xs text-muted-foreground">URL atual da tela: <code>{diagnostics?.currentCommandsUrl ?? "—"}</code></div>
+            </div>
             </div>
           </CardContent>
         </Card>
