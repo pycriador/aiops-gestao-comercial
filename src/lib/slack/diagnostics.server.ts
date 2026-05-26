@@ -1,6 +1,6 @@
 import { getRequest } from "@tanstack/react-start/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { SLACK_PRODUCTION_BASE_URL, SLACK_URLS, slackRuntimeEnvironment } from "./constants";
+import { SLACK_PRODUCTION_BASE_URL, SLACK_PRODUCTION_ORIGINS, SLACK_URLS, slackRuntimeEnvironment } from "./constants";
 
 async function canViewSlackDiagnostics(userId: string) {
   const [admin, manager] = await Promise.all([
