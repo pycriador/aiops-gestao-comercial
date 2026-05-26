@@ -13,8 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, MessageSquarePlus, Building2, Phone, MapPin, User, Shield } from "lucide-react";
-import { NEGOTIATION_STATUSES, daysSince } from "@/lib/constants";
+import { ArrowLeft, MessageSquarePlus, Building2, Phone, MapPin, User, Shield, Pencil } from "lucide-react";
+import { NEGOTIATION_STATUSES, BR_STATES, GUARANTOR_TYPES, daysSince } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/portfolio/$agencyId")({
   component: AgencyDetailPage,
