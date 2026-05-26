@@ -62,9 +62,11 @@ export async function handleCommand(args: {
       const items = await pendingsFor(consultant);
       return { response_type: "ephemeral", blocks: pendingsBlocks(items) };
     }
-    case "/nova-imobiliaria":
-      await slack.openView(args.trigger_id, newAgencyView());
+    case "/nova-imobiliaria": {
+      const consultants = await listConsultantsForPicker();
+      await slack.openView(args.trigger_id, newAgencyView({ consultants }));
       return { response_type: "ephemeral", text: "Abrindo cadastro…" };
+    }
     case "/atualizar": {
       const agencies = await listAgenciesForConsultant(consultant);
       await slack.openView(args.trigger_id, pickAgencyView({
