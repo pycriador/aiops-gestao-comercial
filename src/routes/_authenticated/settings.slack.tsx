@@ -1,26 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, ExternalLink, CheckCircle2, AlertTriangle, Activity } from "lucide-react";
+import { Copy, ExternalLink, CheckCircle2, AlertTriangle, Activity, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SLACK_URLS } from "@/lib/slack/constants";
+import { getSlackDiagnostics, testSlackCommandsEndpoint } from "@/lib/slack/diagnostics.functions";
 
 export const Route = createFileRoute("/_authenticated/settings/slack")({
   component: SlackSettingsPage,
 });
 
-const BASE_URL = "https://project--d11cb06d-335d-4537-a5a5-ab92c2b041f2.lovable.app";
-
-const URLS = {
-  events: `${BASE_URL}/api/public/slack/events`,
-  interactions: `${BASE_URL}/api/public/slack/interactions`,
-  commands: `${BASE_URL}/api/public/slack/commands`,
-  cron: `${BASE_URL}/api/public/slack/cron`,
-};
+const URLS = SLACK_URLS;
 
 const MANIFEST = {
   display_information: {
@@ -53,6 +49,9 @@ const MANIFEST = {
 
 function SlackSettingsPage() {
   const [copied, setCopied] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const fetchDiagnostics = useServerFn(getSlackDiagnostics);
+  const testCommands = useServerFn(testSlackCommandsEndpoint);
 
   const { data: events = [] } = useQuery({
     queryKey: ["slack-events-recent"],
@@ -80,6 +79,22 @@ function SlackSettingsPage() {
     refetchInterval: 10_000,
   });
 
+  const { data: diagnostics } = useQuery({
+    queryKey: ["slack-diagnostics"],
+    queryFn: () => fetchDiagnostics(),
+    refetchInterval: 10_000,
+  });
+
+  const testMutation = useMutation({
+    mutationFn: () => testCommands(),
+    onSuccess: (res) => {
+      toast.success(`/commands respondeu HTTP ${res.status} em ${res.durationMs}ms`);
+      queryClient.invalidateQueries({ queryKey: ["slack-diagnostics"] });
+      queryClient.invalidateQueries({ queryKey: ["slack-events-recent"] });
+    },
+    onError: (err: any) => toast.error(err?.message ?? "Falha ao testar /commands"),
+  });
+
   const copy = async (label: string, value: string) => {
     await navigator.clipboard.writeText(value);
     setCopied(label);
@@ -88,6 +103,10 @@ function SlackSettingsPage() {
   };
 
   const hasEvents = events.length > 0;
+  const last = diagnostics?.lastCommand;
+  const payload = (last?.payload ?? {}) as any;
+  const response = (last?.response ?? {}) as any;
+  const hmac = payload?.hmac ?? {};
 
   return (
     <div>
