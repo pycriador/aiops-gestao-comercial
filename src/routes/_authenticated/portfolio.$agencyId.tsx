@@ -63,6 +63,11 @@ function AgencyDetailPage() {
         actions={
           <div className="flex gap-2">
             <Button asChild variant="ghost"><Link to="/portfolio"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link></Button>
+            <EditAgencyDialog agency={agency} onSaved={() => {
+              qc.invalidateQueries({ queryKey: ["agency", agencyId] });
+              qc.invalidateQueries({ queryKey: ["agencies-list"] });
+              qc.invalidateQueries({ queryKey: ["agencies-all"] });
+            }} />
             <NewInteractionDialog agency={agency} onSaved={() => {
               qc.invalidateQueries({ queryKey: ["agency", agencyId] });
               qc.invalidateQueries({ queryKey: ["interactions", agencyId] });
