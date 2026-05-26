@@ -1,14 +1,12 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { Building2, LayoutDashboard, Briefcase, Upload, Settings, LogOut, Users, MessageSquare } from "lucide-react";
+import { Building2, LayoutDashboard, Briefcase, Upload, Settings, LogOut, Users, MessageSquare, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
-    // Only enforce on the client — during SSR there's no session storage,
-    // which would cause a redirect-to-login flicker on every navigation.
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
@@ -19,9 +17,9 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Mission Control", icon: LayoutDashboard },
   { to: "/portfolio", label: "Carteira", icon: Briefcase },
-  { to: "/bot", label: "Bot WhatsApp", icon: MessageSquare, managerOnly: true },
+  { to: "/bot", label: "WhatsApp Ops", icon: MessageSquare, managerOnly: true },
   { to: "/import", label: "Importar", icon: Upload, adminOnly: true },
   { to: "/consultants", label: "Consultores", icon: Users, managerOnly: true },
   { to: "/settings/hubspot", label: "HubSpot", icon: Settings, managerOnly: true },
@@ -38,19 +36,30 @@ function AuthedLayout() {
     navigate({ to: "/login" });
   };
 
+  const role = isAdmin ? "Admin" : isManager ? "Gestor" : "Consultor";
+
   return (
-    <div className="min-h-screen flex bg-background">
-      <aside className="hidden lg:flex w-64 flex-col border-r bg-sidebar text-sidebar-foreground">
-        <div className="h-16 flex items-center gap-2 px-6 border-b border-sidebar-border">
-          <div className="h-9 w-9 rounded-xl bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center">
-            <Building2 className="h-5 w-5" />
+    <div className="min-h-screen flex">
+      <aside className="hidden lg:flex w-64 flex-col bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border relative">
+        {/* subtle vertical glow */}
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-primary/30 to-transparent" />
+
+        <div className="h-16 flex items-center gap-3 px-5 border-b border-sidebar-border">
+          <div className="relative h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center glow-primary">
+            <Building2 className="h-4.5 w-4.5 text-primary-foreground" />
           </div>
           <div className="leading-tight">
-            <div className="font-semibold text-sm">Carteira</div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Imobiliárias</div>
+            <div className="font-display font-semibold text-sm tracking-tight">Carteira OS</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/80 flex items-center gap-1">
+              <span className="h-1 w-1 rounded-full bg-success animate-pulse" /> live
+            </div>
           </div>
         </div>
-        <nav className="flex-1 p-3 space-y-0.5">
+
+        <div className="px-5 pt-5 pb-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground/60">
+          Operação
+        </div>
+        <nav className="flex-1 px-3 space-y-0.5">
           {NAV.filter((n) => !n.adminOnly || isAdmin).filter((n) => !n.managerOnly || isAdmin || isManager).map((item) => {
             const Icon = item.icon;
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
@@ -59,25 +68,38 @@ function AuthedLayout() {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all",
                   active
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent"
+                    ? "bg-sidebar-accent text-foreground"
+                    : "text-sidebar-foreground/75 hover:text-foreground hover:bg-sidebar-accent/60"
                 )}
               >
-                <Icon className="h-4 w-4" />
-                {item.label}
+                {active && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r bg-primary shadow-[0_0_12px_var(--primary)]" />
+                )}
+                <Icon className={cn("h-4 w-4 transition-colors", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
-        <div className="p-3 border-t border-sidebar-border">
-          <div className="px-3 py-2 text-xs">
-            <div className="font-medium truncate">{user?.email}</div>
-            <div className="text-muted-foreground">{isAdmin ? "Admin" : isManager ? "Gestor" : "Consultor"}</div>
+
+        <div className="p-3 border-t border-sidebar-border space-y-2">
+          <div className="px-3 py-2 rounded-lg bg-sidebar-accent/40 border border-sidebar-border">
+            <div className="flex items-center gap-2 text-xs">
+              <div className="h-7 w-7 rounded-md bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/20 flex items-center justify-center text-[11px] font-semibold uppercase">
+                {user?.email?.[0]}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-medium truncate text-foreground/90">{user?.email}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                  <Activity className="h-2.5 w-2.5 text-primary" /> {role}
+                </div>
+              </div>
+            </div>
           </div>
-          <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" /> Sair
+          <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" /> Encerrar sessão
           </Button>
         </div>
       </aside>
