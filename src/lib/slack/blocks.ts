@@ -285,6 +285,69 @@ export function newAgencyView(args?: {
   };
 }
 
+export function clevelView(args: {
+  agencies: Array<{ id: string; name: string; city: string; state: string }>;
+}) {
+  const opts = args.agencies.slice(0, 100).map((a) =>
+    option(a.id, `${a.name} — ${a.city}/${a.state}`.slice(0, 75)),
+  );
+  const urgencyOpts = [
+    option("alta", "🔴 Alta"),
+    option("media", "🟡 Média"),
+    option("baixa", "🟢 Baixa"),
+  ];
+  return {
+    type: "modal",
+    callback_id: "submit_clevel",
+    title: { type: "plain_text", text: "Apoio C-Level" },
+    submit: { type: "plain_text", text: "Solicitar apoio" },
+    close: { type: "plain_text", text: "Cancelar" },
+    blocks: [
+      {
+        type: "input",
+        block_id: "agency",
+        label: { type: "plain_text", text: "Imobiliária" },
+        element: opts.length
+          ? {
+              type: "static_select",
+              action_id: "v",
+              placeholder: { type: "plain_text", text: "Selecione" },
+              options: opts,
+            }
+          : {
+              type: "plain_text_input",
+              action_id: "v",
+              placeholder: { type: "plain_text", text: "Nenhuma imobiliária na sua carteira" },
+            },
+      },
+      {
+        type: "input",
+        block_id: "reason",
+        label: { type: "plain_text", text: "Motivo do apoio" },
+        element: { type: "plain_text_input", action_id: "v", multiline: true },
+      },
+      {
+        type: "input",
+        block_id: "urgency",
+        label: { type: "plain_text", text: "Urgência" },
+        element: {
+          type: "static_select",
+          action_id: "v",
+          initial_option: urgencyOpts[1],
+          options: urgencyOpts,
+        },
+      },
+      {
+        type: "input",
+        block_id: "context",
+        optional: true,
+        label: { type: "plain_text", text: "Contexto / mensagem para liderança" },
+        element: { type: "plain_text_input", action_id: "v", multiline: true },
+      },
+    ],
+  };
+}
+
 export function confirmView(args: { title: string; summaryLines: string[]; private_metadata: string }) {
   return {
     type: "modal",
