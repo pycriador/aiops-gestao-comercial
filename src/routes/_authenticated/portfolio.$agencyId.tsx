@@ -264,7 +264,7 @@ function NewInteractionDialog({ agency, onSaved }: { agency: any; onSaved: () =>
   );
 }
 
-function EditAgencyDialog({ agency, onSaved }: { agency: any; onSaved: () => void }) {
+function EditAgencyDialog({ agency, onSaved, triggerLabel, triggerVariant }: { agency: any; onSaved: () => void; triggerLabel?: string; triggerVariant?: "default" | "outline" | "ghost" }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const { data: consultants = [] } = useQuery({
