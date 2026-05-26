@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { LayoutDashboard, Briefcase, Upload, Settings, LogOut, Users, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Briefcase, Upload, Settings, LogOut, Users, MessageSquare, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
