@@ -19,6 +19,16 @@ async function listAgenciesForConsultant(consultant: SlackConsultant) {
   return data ?? [];
 }
 
+async function listConsultantsForPicker() {
+  const { data } = await supabaseAdmin
+    .from("consultants")
+    .select("id, name, active")
+    .eq("active", true)
+    .order("name", { ascending: true })
+    .limit(100);
+  return (data ?? []).map((c: any) => ({ id: c.id, name: c.name }));
+}
+
 async function getAgency(id: string, consultant: SlackConsultant) {
   const privileged = await isPrivileged(consultant.user_id);
   const { data } = await supabaseAdmin
