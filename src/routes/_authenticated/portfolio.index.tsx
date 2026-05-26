@@ -97,11 +97,15 @@ function PortfolioListPage() {
           </Select>
         </div>
 
-        <Tabs defaultValue="table" className="space-y-4">
+        <Tabs defaultValue="kanban" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="table"><List className="h-4 w-4 mr-1.5" /> Tabela</TabsTrigger>
             <TabsTrigger value="kanban"><LayoutGrid className="h-4 w-4 mr-1.5" /> Kanban</TabsTrigger>
+            <TabsTrigger value="table"><List className="h-4 w-4 mr-1.5" /> Tabela</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="kanban">
+            <KanbanBoard agencies={filtered} isLoading={isLoading} />
+          </TabsContent>
 
           <TabsContent value="table">
             <Card className="overflow-hidden">
@@ -148,9 +152,6 @@ function PortfolioListPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="kanban">
-            <KanbanBoard agencies={filtered} isLoading={isLoading} />
-          </TabsContent>
         </Tabs>
       </div>
     </div>
