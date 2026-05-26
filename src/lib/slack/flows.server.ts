@@ -176,16 +176,19 @@ export async function handleBlockAction(payload: any): Promise<void> {
       await slack.openView(trigger_id, newAgencyView({ consultants }));
       return;
     }
-    case "update_agency":
-    case "menu_atualizar":
     case "request_c_level_support":
     case "menu_clevel": {
       const agencies = await listAgenciesForConsultant(consultant);
-      const isClevel = action.action_id === "menu_clevel" || action.action_id === "request_c_level_support";
+      await slack.openView(trigger_id, clevelView({ agencies }));
+      return;
+    }
+    case "update_agency":
+    case "menu_atualizar": {
+      const agencies = await listAgenciesForConsultant(consultant);
       await slack.openView(trigger_id, pickAgencyView({
         agencies,
-        flow: isClevel ? "clevel" : "atualizar",
-        title: isClevel ? "Apoio C-Level" : "Atualizar",
+        flow: "atualizar",
+        title: "Atualizar",
         submitLabel: "Próximo",
       }));
       return;
