@@ -39,22 +39,25 @@ export const Route = createFileRoute("/api/public/slack/interactions")({
 
           log("parsed", { type, actionId, blockId, userId, hmac_valid: hmac.valid });
 
+          // IMPORTANT: para block_actions, a resposta síncrona substitui a
+          // mensagem original. Sem replace_original=true o Slack descarta o
+          // text e nada aparece na UI (foi o sintoma "nada acontece").
           let body: { text: string; replace_original: boolean };
           switch (actionId) {
             case "view_pending":
-              body = { text: "Teste: botão Pendências acionado", replace_original: false };
+              body = { text: "Teste: botão Pendências acionado", replace_original: true };
               break;
             case "request_c_level_support":
-              body = { text: "Teste: botão Apoio C-Level acionado", replace_original: false };
+              body = { text: "Teste: botão Apoio C-Level acionado", replace_original: true };
               break;
             case "update_agency":
-              body = { text: "Teste: botão Atualizar acionado", replace_original: false };
+              body = { text: "Teste: botão Atualizar acionado", replace_original: true };
               break;
             case "create_agency":
-              body = { text: "Teste: botão Nova imobiliária acionado", replace_original: false };
+              body = { text: "Teste: botão Nova imobiliária acionado", replace_original: true };
               break;
             default:
-              body = { text: `Ação desconhecida: ${actionId ?? "—"}`, replace_original: false };
+              body = { text: `Ação desconhecida: ${actionId ?? "—"}`, replace_original: true };
           }
 
           log("response sent", body);
