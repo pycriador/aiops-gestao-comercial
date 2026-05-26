@@ -23,11 +23,12 @@ export const Route = createFileRoute("/api/public/slack/commands")({
         const log = (msg: string, extra?: any) =>
           console.log(`[slack.commands ${rid} +${Date.now() - t0}ms] ${msg}`, extra ?? "");
 
-        const queueBackground = (promise: Promise<unknown>) => {
+        const queueBackground = (promise: PromiseLike<unknown>) => {
           const runtime = globalThis as any;
           const waitUntil = runtime.EdgeRuntime?.waitUntil ?? runtime.waitUntil;
-          if (typeof waitUntil === "function") waitUntil(promise);
-          else promise.catch((err) => console.error(`[slack.commands ${rid}] background error`, err));
+          const task = Promise.resolve(promise);
+          if (typeof waitUntil === "function") waitUntil(task);
+          else task.catch((err) => console.error(`[slack.commands ${rid}] background error`, err));
         };
 
         const secretStatus = () => {
