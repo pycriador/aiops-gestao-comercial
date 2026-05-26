@@ -144,9 +144,11 @@ export async function handleBlockAction(payload: any): Promise<void> {
       return;
     }
     case "create_agency":
-    case "menu_nova":
-      await slack.openView(trigger_id, newAgencyView());
+    case "menu_nova": {
+      const consultants = await listConsultantsForPicker();
+      await slack.openView(trigger_id, newAgencyView({ consultants }));
       return;
+    }
     case "update_agency":
     case "menu_atualizar":
     case "request_c_level_support":
