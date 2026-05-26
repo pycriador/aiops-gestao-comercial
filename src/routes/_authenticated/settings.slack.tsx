@@ -142,6 +142,57 @@ function SlackSettingsPage() {
         </Card>
 
         <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
+            <CardTitle className="text-base">Diagnóstico /commands</CardTitle>
+            <Button size="sm" variant="secondary" onClick={() => testMutation.mutate()} disabled={testMutation.isPending}>
+              <RefreshCw className={`h-3 w-3 mr-1 ${testMutation.isPending ? "animate-spin" : ""}`} />
+              Testar endpoint /commands
+            </Button>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+            <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-4">
+              <div className="font-medium">Última requisição recebida</div>
+              <div className="text-xs text-muted-foreground">Timestamp: {last ? new Date(last.created_at).toLocaleString("pt-BR") : "—"}</div>
+              <div className="text-xs text-muted-foreground">Command: {payload?.command ?? last?.event_type ?? "—"}</div>
+              <div className="text-xs text-muted-foreground">user_id: {payload?.user_id ?? last?.slack_user_id ?? "—"}</div>
+              <div className="text-xs text-muted-foreground">team_id: {payload?.team_id ?? last?.slack_team_id ?? "—"}</div>
+              <div className="text-xs text-muted-foreground">response_url presente: {payload?.response_url_present ? "sim" : "não"}</div>
+              <div className="text-xs text-muted-foreground">ACK: {response?.ack?.status ?? "—"} {response?.ack?.durationMs !== undefined ? `· ${response.ack.durationMs}ms · ${response.ack.mode}` : ""}</div>
+              <div className="text-xs text-muted-foreground">Ambiente atual: <Badge variant="outline" className="text-[10px]">{diagnostics?.environment ?? "—"}</Badge></div>
+            </div>
+
+            <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-4">
+              <div className="font-medium">Validação HMAC</div>
+              <div className="text-xs text-muted-foreground">x-slack-signature presente: {hmac?.hasSignature ? "sim" : "não"}</div>
+              <div className="text-xs text-muted-foreground">x-slack-request-timestamp presente: {hmac?.hasTimestamp ? "sim" : "não"}</div>
+              <div className="text-xs text-muted-foreground">timestamp drift: {hmac?.timestampDriftSeconds ?? "—"}s</div>
+              <div className="text-xs text-muted-foreground">assinatura calculada: {hmac?.calculatedSignaturePrefix ?? "—"}…</div>
+              <div className="text-xs text-muted-foreground">assinatura recebida: {hmac?.receivedSignaturePrefix ?? "—"}…</div>
+              <Badge className={hmac?.valid ? "border-success/40 text-success" : "border-destructive/40 text-destructive"} variant="outline">
+                {hmac?.valid ? "valid" : "invalid"}{hmac?.reason ? ` · ${hmac.reason}` : ""}
+              </Badge>
+            </div>
+
+            <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-4">
+              <div className="font-medium">Secrets carregados</div>
+              <div className="text-xs text-muted-foreground">SLACK_BOT_TOKEN presente: {diagnostics?.secrets.hasBotToken ? "sim" : "não"}</div>
+              <div className="text-xs text-muted-foreground">SLACK_SIGNING_SECRET presente: {diagnostics?.secrets.hasSigningSecret ? "sim" : "não"}</div>
+              <div className="text-xs text-muted-foreground">SLACK_CRON_SECRET presente: {diagnostics?.secrets.hasCronSecret ? "sim" : "não"}</div>
+              <div className="text-xs text-muted-foreground">Signing Secret termina em: {diagnostics?.secrets.signingSecretLast4 ? `••••${diagnostics.secrets.signingSecretLast4}` : "—"}</div>
+            </div>
+
+            <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-4">
+              <div className="font-medium">URL pública do manifest</div>
+              <code className="block text-xs bg-background/70 border border-border rounded px-2 py-1 break-all">{diagnostics?.expectedCommandsUrl ?? URLS.commands}</code>
+              <Badge className={diagnostics?.manifestUrlMatchesProduction ? "border-success/40 text-success" : "border-destructive/40 text-destructive"} variant="outline">
+                {diagnostics?.manifestUrlMatchesProduction ? "URL de produção correta" : "URL divergente"}
+              </Badge>
+              <div className="text-xs text-muted-foreground">Health: <code>{URLS.health}</code></div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader><CardTitle className="text-base">Passo 1 · Criar o Slack App</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
             <ol className="list-decimal pl-5 space-y-2">
