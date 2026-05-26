@@ -245,19 +245,52 @@ export async function handleViewSubmission(payload: any): Promise<any> {
       name: values.name?.v?.value?.trim(),
       city: values.city?.v?.value?.trim(),
       state: values.state?.v?.selected_option?.value,
+      regional_director: values.regional_director?.v?.value?.trim() ?? null,
+      status: values.status?.v?.selected_option?.value,
+      consultant_id: values.consultant?.v?.selected_option?.value ?? consultant.id,
       stock: values.stock?.v?.value ? parseInt(values.stock.v.value, 10) : 0,
+      guarantor: values.guarantor?.v?.value ?? null,
+      guarantor_type: values.guarantor_type?.v?.selected_option?.value ?? null,
       main_contact: values.main_contact?.v?.value ?? null,
-      status: values.status?.v?.selected_option?.value ?? "Pipeline de Prospecção",
+      contact_role: values.contact_role?.v?.value ?? null,
       feedback: values.feedback?.v?.value ?? null,
+      offer: values.offer?.v?.value ?? null,
+      next_steps: values.next_steps?.v?.value ?? null,
+      clevel: !!values.clevel?.v?.selected_options?.length,
     };
-    if (!draft.name || !draft.city || !draft.state) {
-      return { response_action: "errors", errors: { name: !draft.name ? "Obrigatório." : undefined, city: !draft.city ? "Obrigatório." : undefined, state: !draft.state ? "Obrigatório." : undefined } as any };
+    const errors: Record<string, string> = {};
+    if (!draft.name) errors.name = "Obrigatório.";
+    if (!draft.city) errors.city = "Obrigatório.";
+    if (!draft.state) errors.state = "Obrigatório.";
+    if (!draft.regional_director) errors.regional_director = "Obrigatório.";
+    if (!draft.status) errors.status = "Obrigatório.";
+    if (Object.keys(errors).length) return { response_action: "errors", errors: errors as any };
+
+    // Dedupe: Imobiliária + Cidade + UF
+    const { data: dupes } = await supabaseAdmin
+      .from("real_estate_agencies")
+      .select("id, name, city, state")
+      .ilike("name", draft.name!)
+      .ilike("city", draft.city!)
+      .eq("state", draft.state!)
+      .limit(1);
+    if (dupes && dupes.length > 0) {
+      return {
+        response_action: "errors",
+        errors: { name: `Possível duplicidade: já existe "${dupes[0].name}" em ${dupes[0].city}/${dupes[0].state}.` } as any,
+      };
     }
+
     const summary = [
       `*${draft.name}* — ${draft.city}/${draft.state}`,
+      `*Diretor Regional:* ${draft.regional_director}`,
       `*Status:* ${draft.status} · *Estoque:* ${draft.stock}`,
-      draft.main_contact ? `*Contato:* ${draft.main_contact}` : null,
-      draft.feedback ? `*Contexto:* ${draft.feedback}` : null,
+      draft.guarantor_type ? `*Garantidor:* ${draft.guarantor_type}${draft.guarantor ? ` (${draft.guarantor})` : ""}` : null,
+      draft.main_contact ? `*Contato:* ${draft.main_contact}${draft.contact_role ? ` — ${draft.contact_role}` : ""}` : null,
+      draft.offer ? `*Proposta:* ${draft.offer}` : null,
+      draft.feedback ? `*Feedback:* ${draft.feedback}` : null,
+      draft.next_steps ? `*Próximos passos:* ${draft.next_steps}` : null,
+      draft.clevel ? `🚨 *Apoio C-Level solicitado*` : null,
     ].filter(Boolean) as string[];
 
     return {
