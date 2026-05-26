@@ -35,8 +35,8 @@ export async function loadSlackDiagnostics(userId: string) {
     currentHealthUrl,
     productionBaseUrl: SLACK_PRODUCTION_BASE_URL,
     expectedCommandsUrl: SLACK_URLS.commands,
-    manifestUrlMatchesProduction: SLACK_URLS.commands === "https://project--d11cb06d-335d-4537-a5a5-ab92c2b041f2.lovable.app/api/public/slack/commands",
-    productionPublished: currentOrigin === SLACK_PRODUCTION_BASE_URL,
+    manifestUrlMatchesProduction: SLACK_URLS.commands.startsWith(SLACK_PRODUCTION_BASE_URL),
+    productionPublished: currentOrigin ? (SLACK_PRODUCTION_ORIGINS as readonly string[]).includes(currentOrigin) : false,
     secrets: {
       hasBotToken: !!process.env.SLACK_BOT_TOKEN,
       hasSigningSecret: !!signingSecret,
