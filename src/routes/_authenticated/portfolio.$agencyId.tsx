@@ -322,7 +322,7 @@ function EditAgencyDialog({ agency, onSaved, triggerLabel, triggerVariant }: { a
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline"><Pencil className="h-4 w-4 mr-1" /> Editar</Button>
+        <Button variant={triggerVariant ?? "outline"} size="sm"><Pencil className="h-4 w-4 mr-1" /> {triggerLabel ?? "Editar"}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Editar imobiliária</DialogTitle></DialogHeader>
