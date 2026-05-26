@@ -19,10 +19,15 @@ import { Route as AuthenticatedConsultantsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedBotRouteImport } from './routes/_authenticated/bot'
 import { Route as AuthenticatedPortfolioIndexRouteImport } from './routes/_authenticated/portfolio.index'
 import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings.users'
+import { Route as AuthenticatedSettingsSlackRouteImport } from './routes/_authenticated/settings.slack'
 import { Route as AuthenticatedSettingsHubspotRouteImport } from './routes/_authenticated/settings.hubspot'
 import { Route as AuthenticatedPortfolioNewRouteImport } from './routes/_authenticated/portfolio.new'
 import { Route as AuthenticatedPortfolioAgencyIdRouteImport } from './routes/_authenticated/portfolio.$agencyId'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp.webhook'
+import { Route as ApiPublicSlackInteractionsRouteImport } from './routes/api/public/slack.interactions'
+import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack.events'
+import { Route as ApiPublicSlackCronRouteImport } from './routes/api/public/slack.cron'
+import { Route as ApiPublicSlackCommandsRouteImport } from './routes/api/public/slack.commands'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -76,6 +81,12 @@ const AuthenticatedSettingsUsersRoute =
     path: '/settings/users',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsSlackRoute =
+  AuthenticatedSettingsSlackRouteImport.update({
+    id: '/settings/slack',
+    path: '/settings/slack',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsHubspotRoute =
   AuthenticatedSettingsHubspotRouteImport.update({
     id: '/settings/hubspot',
@@ -100,6 +111,27 @@ const ApiPublicWhatsappWebhookRoute =
     path: '/api/public/whatsapp/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSlackInteractionsRoute =
+  ApiPublicSlackInteractionsRouteImport.update({
+    id: '/api/public/slack/interactions',
+    path: '/api/public/slack/interactions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicSlackEventsRoute = ApiPublicSlackEventsRouteImport.update({
+  id: '/api/public/slack/events',
+  path: '/api/public/slack/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSlackCronRoute = ApiPublicSlackCronRouteImport.update({
+  id: '/api/public/slack/cron',
+  path: '/api/public/slack/cron',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSlackCommandsRoute = ApiPublicSlackCommandsRouteImport.update({
+  id: '/api/public/slack/commands',
+  path: '/api/public/slack/commands',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -112,8 +144,13 @@ export interface FileRoutesByFullPath {
   '/portfolio/$agencyId': typeof AuthenticatedPortfolioAgencyIdRoute
   '/portfolio/new': typeof AuthenticatedPortfolioNewRoute
   '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
+  '/settings/slack': typeof AuthenticatedSettingsSlackRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/portfolio/': typeof AuthenticatedPortfolioIndexRoute
+  '/api/public/slack/commands': typeof ApiPublicSlackCommandsRoute
+  '/api/public/slack/cron': typeof ApiPublicSlackCronRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
+  '/api/public/slack/interactions': typeof ApiPublicSlackInteractionsRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -126,8 +163,13 @@ export interface FileRoutesByTo {
   '/portfolio/$agencyId': typeof AuthenticatedPortfolioAgencyIdRoute
   '/portfolio/new': typeof AuthenticatedPortfolioNewRoute
   '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
+  '/settings/slack': typeof AuthenticatedSettingsSlackRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/portfolio': typeof AuthenticatedPortfolioIndexRoute
+  '/api/public/slack/commands': typeof ApiPublicSlackCommandsRoute
+  '/api/public/slack/cron': typeof ApiPublicSlackCronRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
+  '/api/public/slack/interactions': typeof ApiPublicSlackInteractionsRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesById {
@@ -143,8 +185,13 @@ export interface FileRoutesById {
   '/_authenticated/portfolio/$agencyId': typeof AuthenticatedPortfolioAgencyIdRoute
   '/_authenticated/portfolio/new': typeof AuthenticatedPortfolioNewRoute
   '/_authenticated/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
+  '/_authenticated/settings/slack': typeof AuthenticatedSettingsSlackRoute
   '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/_authenticated/portfolio/': typeof AuthenticatedPortfolioIndexRoute
+  '/api/public/slack/commands': typeof ApiPublicSlackCommandsRoute
+  '/api/public/slack/cron': typeof ApiPublicSlackCronRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
+  '/api/public/slack/interactions': typeof ApiPublicSlackInteractionsRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRouteTypes {
@@ -160,8 +207,13 @@ export interface FileRouteTypes {
     | '/portfolio/$agencyId'
     | '/portfolio/new'
     | '/settings/hubspot'
+    | '/settings/slack'
     | '/settings/users'
     | '/portfolio/'
+    | '/api/public/slack/commands'
+    | '/api/public/slack/cron'
+    | '/api/public/slack/events'
+    | '/api/public/slack/interactions'
     | '/api/public/whatsapp/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -174,8 +226,13 @@ export interface FileRouteTypes {
     | '/portfolio/$agencyId'
     | '/portfolio/new'
     | '/settings/hubspot'
+    | '/settings/slack'
     | '/settings/users'
     | '/portfolio'
+    | '/api/public/slack/commands'
+    | '/api/public/slack/cron'
+    | '/api/public/slack/events'
+    | '/api/public/slack/interactions'
     | '/api/public/whatsapp/webhook'
   id:
     | '__root__'
@@ -190,8 +247,13 @@ export interface FileRouteTypes {
     | '/_authenticated/portfolio/$agencyId'
     | '/_authenticated/portfolio/new'
     | '/_authenticated/settings/hubspot'
+    | '/_authenticated/settings/slack'
     | '/_authenticated/settings/users'
     | '/_authenticated/portfolio/'
+    | '/api/public/slack/commands'
+    | '/api/public/slack/cron'
+    | '/api/public/slack/events'
+    | '/api/public/slack/interactions'
     | '/api/public/whatsapp/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -199,6 +261,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiPublicSlackCommandsRoute: typeof ApiPublicSlackCommandsRoute
+  ApiPublicSlackCronRoute: typeof ApiPublicSlackCronRoute
+  ApiPublicSlackEventsRoute: typeof ApiPublicSlackEventsRoute
+  ApiPublicSlackInteractionsRoute: typeof ApiPublicSlackInteractionsRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
 
@@ -274,6 +340,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsUsersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/slack': {
+      id: '/_authenticated/settings/slack'
+      path: '/settings/slack'
+      fullPath: '/settings/slack'
+      preLoaderRoute: typeof AuthenticatedSettingsSlackRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/hubspot': {
       id: '/_authenticated/settings/hubspot'
       path: '/settings/hubspot'
@@ -300,6 +373,34 @@ declare module '@tanstack/react-router' {
       path: '/api/public/whatsapp/webhook'
       fullPath: '/api/public/whatsapp/webhook'
       preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/slack/interactions': {
+      id: '/api/public/slack/interactions'
+      path: '/api/public/slack/interactions'
+      fullPath: '/api/public/slack/interactions'
+      preLoaderRoute: typeof ApiPublicSlackInteractionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/slack/events': {
+      id: '/api/public/slack/events'
+      path: '/api/public/slack/events'
+      fullPath: '/api/public/slack/events'
+      preLoaderRoute: typeof ApiPublicSlackEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/slack/cron': {
+      id: '/api/public/slack/cron'
+      path: '/api/public/slack/cron'
+      fullPath: '/api/public/slack/cron'
+      preLoaderRoute: typeof ApiPublicSlackCronRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/slack/commands': {
+      id: '/api/public/slack/commands'
+      path: '/api/public/slack/commands'
+      fullPath: '/api/public/slack/commands'
+      preLoaderRoute: typeof ApiPublicSlackCommandsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -330,6 +431,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedPortfolioRoute: typeof AuthenticatedPortfolioRouteWithChildren
   AuthenticatedSettingsHubspotRoute: typeof AuthenticatedSettingsHubspotRoute
+  AuthenticatedSettingsSlackRoute: typeof AuthenticatedSettingsSlackRoute
   AuthenticatedSettingsUsersRoute: typeof AuthenticatedSettingsUsersRoute
 }
 
@@ -340,6 +442,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedPortfolioRoute: AuthenticatedPortfolioRouteWithChildren,
   AuthenticatedSettingsHubspotRoute: AuthenticatedSettingsHubspotRoute,
+  AuthenticatedSettingsSlackRoute: AuthenticatedSettingsSlackRoute,
   AuthenticatedSettingsUsersRoute: AuthenticatedSettingsUsersRoute,
 }
 
@@ -350,18 +453,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiPublicSlackCommandsRoute: ApiPublicSlackCommandsRoute,
+  ApiPublicSlackCronRoute: ApiPublicSlackCronRoute,
+  ApiPublicSlackEventsRoute: ApiPublicSlackEventsRoute,
+  ApiPublicSlackInteractionsRoute: ApiPublicSlackInteractionsRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

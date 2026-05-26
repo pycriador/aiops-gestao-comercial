@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/dashboard", label: "Mission Control", icon: LayoutDashboard },
   { to: "/portfolio", label: "Carteira", icon: Briefcase },
-  { to: "/bot", label: "WhatsApp Ops", icon: MessageSquare, managerOnly: true },
+  { to: "/settings/slack", label: "Slack Bot", icon: MessageSquare, managerOnly: true },
   { to: "/import", label: "Importar", icon: Upload, adminOnly: true },
   { to: "/consultants", label: "Consultores", icon: Users, managerOnly: true },
   { to: "/settings/hubspot", label: "HubSpot", icon: Settings, managerOnly: true },

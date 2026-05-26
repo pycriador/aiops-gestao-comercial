@@ -155,6 +155,7 @@ export type Database = {
           name: string
           phone: string | null
           regional: string | null
+          slack_user_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -166,6 +167,7 @@ export type Database = {
           name: string
           phone?: string | null
           regional?: string | null
+          slack_user_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -177,6 +179,7 @@ export type Database = {
           name?: string
           phone?: string | null
           regional?: string | null
+          slack_user_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -302,6 +305,126 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      slack_events: {
+        Row: {
+          channel_id: string | null
+          consultant_id: string | null
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          response: Json | null
+          slack_team_id: string | null
+          slack_user_id: string | null
+          status: string
+        }
+        Insert: {
+          channel_id?: string | null
+          consultant_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          response?: Json | null
+          slack_team_id?: string | null
+          slack_user_id?: string | null
+          status?: string
+        }
+        Update: {
+          channel_id?: string | null
+          consultant_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          response?: Json | null
+          slack_team_id?: string | null
+          slack_user_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      slack_notifications: {
+        Row: {
+          agency_id: string | null
+          channel_id: string | null
+          consultant_id: string | null
+          created_at: string
+          id: string
+          message_ts: string | null
+          notification_type: string
+          payload: Json | null
+          slack_user_id: string | null
+        }
+        Insert: {
+          agency_id?: string | null
+          channel_id?: string | null
+          consultant_id?: string | null
+          created_at?: string
+          id?: string
+          message_ts?: string | null
+          notification_type: string
+          payload?: Json | null
+          slack_user_id?: string | null
+        }
+        Update: {
+          agency_id?: string | null
+          channel_id?: string | null
+          consultant_id?: string | null
+          created_at?: string
+          id?: string
+          message_ts?: string | null
+          notification_type?: string
+          payload?: Json | null
+          slack_user_id?: string | null
+        }
+        Relationships: []
+      }
+      slack_sessions: {
+        Row: {
+          agency_id: string | null
+          consultant_id: string | null
+          created_at: string
+          current_flow: string | null
+          current_step: string
+          expires_at: string
+          id: string
+          session_data: Json
+          slack_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string | null
+          consultant_id?: string | null
+          created_at?: string
+          current_flow?: string | null
+          current_step?: string
+          expires_at?: string
+          id?: string
+          session_data?: Json
+          slack_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string | null
+          consultant_id?: string | null
+          created_at?: string
+          current_flow?: string | null
+          current_step?: string
+          expires_at?: string
+          id?: string
+          session_data?: Json
+          slack_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
