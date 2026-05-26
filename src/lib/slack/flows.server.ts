@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { slack } from "./client.server";
 import { resolveConsultant, isPrivileged, type SlackConsultant } from "./consultant.server";
 import {
-  homeMenu, pickAgencyView, updateAgencyView, newAgencyView, confirmView, pendingsBlocks,
+  homeMenu, pickAgencyView, updateAgencyView, newAgencyView, confirmView, pendingsBlocks, clevelView,
 } from "./blocks";
 import { daysSince } from "@/lib/constants";
 
