@@ -1,6 +1,6 @@
 import { getRequest } from "@tanstack/react-start/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { SLACK_URLS, slackRuntimeEnvironment } from "./constants";
+import { SLACK_PRODUCTION_BASE_URL, SLACK_URLS, slackRuntimeEnvironment } from "./constants";
 
 async function canViewSlackDiagnostics(userId: string) {
   const [admin, manager] = await Promise.all([
@@ -23,12 +23,20 @@ export async function loadSlackDiagnostics(userId: string) {
 
   const req = getRequest();
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
+  const currentUrl = req?.url ? new URL(req.url) : null;
+  const currentOrigin = currentUrl?.origin ?? null;
+  const currentCommandsUrl = currentOrigin ? `${currentOrigin}/api/public/slack/commands` : null;
+  const currentHealthUrl = currentOrigin ? `${currentOrigin}/api/public/slack/health` : null;
 
   return {
     environment: slackRuntimeEnvironment(req?.url),
-    currentOrigin: req?.url ? new URL(req.url).origin : null,
+    currentOrigin,
+    currentCommandsUrl,
+    currentHealthUrl,
+    productionBaseUrl: SLACK_PRODUCTION_BASE_URL,
     expectedCommandsUrl: SLACK_URLS.commands,
     manifestUrlMatchesProduction: SLACK_URLS.commands === "https://project--d11cb06d-335d-4537-a5a5-ab92c2b041f2.lovable.app/api/public/slack/commands",
+    productionPublished: currentOrigin === SLACK_PRODUCTION_BASE_URL,
     secrets: {
       hasBotToken: !!process.env.SLACK_BOT_TOKEN,
       hasSigningSecret: !!signingSecret,
