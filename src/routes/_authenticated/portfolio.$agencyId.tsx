@@ -12,9 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, MessageSquarePlus, Building2, Phone, MapPin, User, Shield, Pencil } from "lucide-react";
+import { ArrowLeft, MessageSquarePlus, Building2, Phone, MapPin, User, Shield, Pencil, Trash2 } from "lucide-react";
 import { NEGOTIATION_STATUSES, BR_STATES, GUARANTOR_TYPES, daysSince } from "@/lib/constants";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 export const Route = createFileRoute("/_authenticated/portfolio/$agencyId")({
   component: AgencyDetailPage,
@@ -24,6 +26,7 @@ function AgencyDetailPage() {
   const { agencyId } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { isAdmin } = useCurrentUser();
 
   const { data: agency, isLoading } = useQuery({
     queryKey: ["agency", agencyId],
@@ -63,6 +66,11 @@ function AgencyDetailPage() {
         actions={
           <div className="flex gap-2">
             <Button asChild variant="ghost"><Link to="/portfolio"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link></Button>
+            {isAdmin && <DeleteAgencyDialog agency={agency} onDeleted={() => {
+              qc.invalidateQueries({ queryKey: ["agencies-list"] });
+              qc.invalidateQueries({ queryKey: ["agencies-all"] });
+              navigate({ to: "/portfolio" });
+            }} />}
             <EditAgencyDialog agency={agency} onSaved={() => {
               qc.invalidateQueries({ queryKey: ["agency", agencyId] });
               qc.invalidateQueries({ queryKey: ["agencies-list"] });
@@ -391,4 +399,51 @@ function EField({ label, children, full }: { label: string; children: React.Reac
     </div>
   );
 }
+
+function DeleteAgencyDialog({ agency, onDeleted }: { agency: any; onDeleted: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await supabase.from("agency_interactions").delete().eq("agency_id", agency.id);
+      await supabase.from("hubspot_mappings").delete().eq("agency_id", agency.id);
+      const { error } = await supabase.from("real_estate_agencies").delete().eq("id", agency.id);
+      if (error) throw error;
+      toast.success("Imobiliária excluída");
+      setOpen(false);
+      onDeleted();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao excluir");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+          <Trash2 className="h-4 w-4 mr-1" /> Excluir
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir imobiliária?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta ação removerá <b>{agency.name}</b> e todo o histórico de interações associado. Não é possível desfazer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            {deleting ? "Excluindo…" : "Excluir definitivamente"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 
