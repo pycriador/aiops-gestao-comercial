@@ -66,6 +66,11 @@ function AgencyDetailPage() {
         actions={
           <div className="flex gap-2">
             <Button asChild variant="ghost"><Link to="/portfolio"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link></Button>
+            {isAdmin && <DeleteAgencyDialog agency={agency} onDeleted={() => {
+              qc.invalidateQueries({ queryKey: ["agencies-list"] });
+              qc.invalidateQueries({ queryKey: ["agencies-all"] });
+              navigate({ to: "/portfolio" });
+            }} />}
             <EditAgencyDialog agency={agency} onSaved={() => {
               qc.invalidateQueries({ queryKey: ["agency", agencyId] });
               qc.invalidateQueries({ queryKey: ["agencies-list"] });
