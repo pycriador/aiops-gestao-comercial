@@ -26,6 +26,7 @@ function AgencyDetailPage() {
   const { agencyId } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { isAdmin } = useCurrentUser();
 
   const { data: agency, isLoading } = useQuery({
     queryKey: ["agency", agencyId],
