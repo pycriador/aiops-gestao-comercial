@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { apiAdmin } from "@/lib/api/client.server";
 
 export type SlackSession = {
   id: string;
@@ -11,7 +11,7 @@ export type SlackSession = {
 };
 
 export async function getActiveSession(slackUserId: string): Promise<SlackSession | null> {
-  const { data } = await supabaseAdmin
+  const { data } = await apiAdmin
     .from("slack_sessions")
     .select("*")
     .eq("slack_user_id", slackUserId)
@@ -32,13 +32,13 @@ export async function startSession(args: {
   data?: Record<string, any>;
 }): Promise<SlackSession> {
   // close any previous
-  await supabaseAdmin
+  await apiAdmin
     .from("slack_sessions")
     .update({ status: "abandoned" })
     .eq("slack_user_id", args.slackUserId)
     .eq("status", "active");
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await apiAdmin
     .from("slack_sessions")
     .insert({
       slack_user_id: args.slackUserId,
@@ -55,10 +55,10 @@ export async function startSession(args: {
 }
 
 export async function updateSession(id: string, patch: Partial<SlackSession>) {
-  const { error } = await supabaseAdmin.from("slack_sessions").update(patch as any).eq("id", id);
+  const { error } = await apiAdmin.from("slack_sessions").update(patch as any).eq("id", id);
   if (error) throw error;
 }
 
 export async function completeSession(id: string) {
-  await supabaseAdmin.from("slack_sessions").update({ status: "completed" }).eq("id", id);
+  await apiAdmin.from("slack_sessions").update({ status: "completed" }).eq("id", id);
 }

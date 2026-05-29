@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { apiAdmin } from "@/lib/api/client.server";
 import { slack } from "./client.server";
 import { resolveConsultant, isPrivileged, type SlackConsultant } from "./consultant.server";
 import {
@@ -9,7 +9,7 @@ import { daysSince } from "@/lib/constants";
 // --------- agency access ----------
 async function listAgenciesForConsultant(consultant: SlackConsultant) {
   const privileged = await isPrivileged(consultant.user_id);
-  let q = supabaseAdmin
+  let q = apiAdmin
     .from("real_estate_agencies")
     .select("id, name, city, state, negotiation_status, contract_stock, c_level_support_needed, last_interaction_date, next_steps, current_offer, current_guarantor, guarantor_type, feedback, main_contact, consultant_id")
     .order("name", { ascending: true })
@@ -20,7 +20,7 @@ async function listAgenciesForConsultant(consultant: SlackConsultant) {
 }
 
 async function listConsultantsForPicker() {
-  const { data } = await supabaseAdmin
+  const { data } = await apiAdmin
     .from("consultants")
     .select("id, name, active")
     .eq("active", true)
@@ -31,7 +31,7 @@ async function listConsultantsForPicker() {
 
 async function getAgency(id: string, consultant: SlackConsultant) {
   const privileged = await isPrivileged(consultant.user_id);
-  const { data } = await supabaseAdmin
+  const { data } = await apiAdmin
     .from("real_estate_agencies")
     .select("*")
     .eq("id", id)
@@ -246,7 +246,7 @@ export async function handleViewSubmission(payload: any): Promise<any> {
     const now = new Date().toISOString();
 
     // 1. Update agency: flag C-Level, refresh interaction counters and next steps
-    await supabaseAdmin
+    await apiAdmin
       .from("real_estate_agencies")
       .update({
         c_level_support_needed: true,
@@ -258,7 +258,7 @@ export async function handleViewSubmission(payload: any): Promise<any> {
       .eq("id", agencyId);
 
     // 2. Append history entry
-    await supabaseAdmin.from("agency_interactions").insert({
+    await apiAdmin.from("agency_interactions").insert({
       agency_id: agencyId,
       created_by: consultant.user_id,
       created_by_name: consultant.name,
@@ -347,7 +347,7 @@ export async function handleViewSubmission(payload: any): Promise<any> {
     if (Object.keys(errors).length) return { response_action: "errors", errors: errors as any };
 
     // Dedupe: Imobiliária + Cidade + UF
-    const { data: dupes } = await supabaseAdmin
+    const { data: dupes } = await apiAdmin
       .from("real_estate_agencies")
       .select("id, name, city, state")
       .ilike("name", draft.name!)
@@ -398,9 +398,9 @@ export async function handleViewSubmission(payload: any): Promise<any> {
       if (typeof patch.clevel === "boolean") updates.c_level_support_needed = patch.clevel;
 
       // 1. agency update (interaction trigger also syncs core fields, but explicit update keeps non-interaction fields)
-      await supabaseAdmin.from("real_estate_agencies").update(updates).eq("id", agency_id);
+      await apiAdmin.from("real_estate_agencies").update(updates).eq("id", agency_id);
       // 2. interaction log (immutable history)
-      await supabaseAdmin.from("agency_interactions").insert({
+      await apiAdmin.from("agency_interactions").insert({
         agency_id, created_by: consultant.user_id, created_by_name: consultant.name,
         interaction_type: "slack", source: "web", // 'slack' não está no enum update_source; usar web
         feedback: patch.feedback ?? null,
@@ -411,7 +411,7 @@ export async function handleViewSubmission(payload: any): Promise<any> {
         contract_stock: patch.stock ?? null,
       });
       // 3. fetch agency name for summary
-      const { data: agencyRow } = await supabaseAdmin
+      const { data: agencyRow } = await apiAdmin
         .from("real_estate_agencies")
         .select("name")
         .eq("id", agency_id)
@@ -433,7 +433,7 @@ export async function handleViewSubmission(payload: any): Promise<any> {
       const hasFeedback = !!(draft.feedback && String(draft.feedback).trim());
       const hasNextSteps = !!(draft.next_steps && String(draft.next_steps).trim());
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await apiAdmin
         .from("real_estate_agencies")
         .insert({
           name: draft.name,
@@ -466,7 +466,7 @@ export async function handleViewSubmission(payload: any): Promise<any> {
         // Insert history WITHOUT triggering the sync trigger duplicating fields:
         // the agency was just created with these values; trigger will bump total_interactions to 2.
         // To keep consistency, decrement total_interactions counter by resetting it after insert.
-        await supabaseAdmin.from("agency_interactions").insert({
+        await apiAdmin.from("agency_interactions").insert({
           agency_id: data.id,
           created_by: consultant.user_id,
           created_by_name: consultant.name,
@@ -480,7 +480,7 @@ export async function handleViewSubmission(payload: any): Promise<any> {
           contract_stock: draft.stock ?? 0,
         });
         // The trigger incremented total_interactions; normalize back to 1.
-        await supabaseAdmin
+        await apiAdmin
           .from("real_estate_agencies")
           .update({ total_interactions: 1 })
           .eq("id", data.id);

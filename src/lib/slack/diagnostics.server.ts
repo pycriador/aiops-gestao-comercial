@@ -1,11 +1,11 @@
 import { getRequest } from "@tanstack/react-start/server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { apiAdmin } from "@/lib/api/client.server";
 import { SLACK_PRODUCTION_BASE_URL, SLACK_PRODUCTION_ORIGINS, SLACK_URLS, slackRuntimeEnvironment } from "./constants";
 
 async function canViewSlackDiagnostics(userId: string) {
   const [admin, manager] = await Promise.all([
-    supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "admin" }),
-    supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "manager" }),
+    apiAdmin.rpc("has_role", { _user_id: userId, _role: "admin" }),
+    apiAdmin.rpc("has_role", { _user_id: userId, _role: "manager" }),
   ]);
   return !!admin.data || !!manager.data;
 }
@@ -13,7 +13,7 @@ async function canViewSlackDiagnostics(userId: string) {
 export async function loadSlackDiagnostics(userId: string) {
   if (!(await canViewSlackDiagnostics(userId))) throw new Error("Unauthorized");
 
-  const { data: lastCommand } = await supabaseAdmin
+  const { data: lastCommand } = await apiAdmin
     .from("slack_events")
     .select("event_type,status,created_at,slack_user_id,slack_team_id,channel_id,payload,response,error_message")
     .like("event_type", "command:%")

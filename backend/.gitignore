@@ -1,0 +1,31 @@
+# ── Environment & secrets ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Python virtualenv ─────────────────────────────────────────────────
+.venv/
+venv/
+ENV/
+env/
+
+# ── Runtime / cache ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ── Local databases ───────────────────────────────────────────────────
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Credentials in SQL scripts ──────────────────────────────────────
+sql/**/regras.txt
+sql/**/regras.local.txt
+sql/**/003_exported_data.sql

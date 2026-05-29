@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api/client";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,7 @@ function AgencyDetailPage() {
   const { data: agency, isLoading } = useQuery({
     queryKey: ["agency", agencyId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await api
         .from("real_estate_agencies")
         .select("*, consultants(id, name, phone)")
         .eq("id", agencyId)
@@ -44,7 +44,7 @@ function AgencyDetailPage() {
   const { data: interactions = [] } = useQuery({
     queryKey: ["interactions", agencyId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await api
         .from("agency_interactions")
         .select("*")
         .eq("agency_id", agencyId)
@@ -188,8 +188,8 @@ function NewInteractionDialog({ agency, onSaved }: { agency: any; onSaved: () =>
   const submit = async () => {
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from("agency_interactions").insert({
+      const { data: { user } } = await api.auth.getUser();
+      const { error } = await api.from("agency_interactions").insert({
         agency_id: agency.id,
         status_before: agency.negotiation_status,
         status_after: form.status_after,
@@ -278,7 +278,7 @@ function EditAgencyDialog({ agency, onSaved, triggerLabel, triggerVariant }: { a
   const { data: consultants = [] } = useQuery({
     queryKey: ["consultants-active"],
     queryFn: async () => {
-      const { data } = await supabase.from("consultants").select("id, name").eq("active", true).order("name");
+      const { data } = await api.from("consultants").select("id, name").eq("active", true).order("name");
       return data ?? [];
     },
   });
@@ -308,14 +308,14 @@ function EditAgencyDialog({ agency, onSaved, triggerLabel, triggerVariant }: { a
     }
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await api.auth.getUser();
       const payload: any = {
         ...form,
         guarantor_type: form.guarantor_type || null,
         consultant_id: form.consultant_id || null,
         updated_by: user?.id,
       };
-      const { error } = await supabase.from("real_estate_agencies").update(payload).eq("id", agency.id);
+      const { error } = await api.from("real_estate_agencies").update(payload).eq("id", agency.id);
       if (error) throw error;
       toast.success("Imobiliária atualizada");
       setOpen(false);
@@ -407,9 +407,9 @@ function DeleteAgencyDialog({ agency, onDeleted }: { agency: any; onDeleted: () 
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await supabase.from("agency_interactions").delete().eq("agency_id", agency.id);
-      await supabase.from("hubspot_mappings").delete().eq("agency_id", agency.id);
-      const { error } = await supabase.from("real_estate_agencies").delete().eq("id", agency.id);
+      await api.from("agency_interactions").delete().eq("agency_id", agency.id);
+      await api.from("hubspot_mappings").delete().eq("agency_id", agency.id);
+      const { error } = await api.from("real_estate_agencies").delete().eq("id", agency.id);
       if (error) throw error;
       toast.success("Imobiliária excluída");
       setOpen(false);

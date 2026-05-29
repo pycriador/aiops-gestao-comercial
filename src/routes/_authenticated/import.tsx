@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import * as XLSX from "xlsx";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api/client";
+import { requireIamPermission } from "@/lib/route-guards";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle } from "lucide-react
 import { NEGOTIATION_STATUSES, BR_STATES, type NegotiationStatus } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/import")({
+  beforeLoad: () => requireIamPermission("import.run"),
   component: ImportPage,
 });
 
@@ -66,7 +68,7 @@ function ImportPage() {
     const json: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
     // existing agencies for dedup
-    const { data: existing } = await supabase
+    const { data: existing } = await api
       .from("real_estate_agencies")
       .select("id, name, city, state");
     const existingMap = new Map(
@@ -120,15 +122,15 @@ function ImportPage() {
     setImporting(true);
     const valid = rows.filter((r) => r.action !== "skip");
     let created = 0, updated = 0, failed = 0;
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await api.auth.getUser();
     for (const r of valid) {
       const { consultant_name, ...rest } = r.parsed as any;
       const payload: any = { ...rest, updated_by: user?.id };
       if (r.action === "update" && r.existingId) {
-        const { error } = await supabase.from("real_estate_agencies").update(payload).eq("id", r.existingId);
+        const { error } = await api.from("real_estate_agencies").update(payload).eq("id", r.existingId);
         if (error) failed++; else updated++;
       } else {
-        const { error } = await supabase.from("real_estate_agencies").insert({ ...payload, created_by: user?.id });
+        const { error } = await api.from("real_estate_agencies").insert({ ...payload, created_by: user?.id });
         if (error) failed++; else created++;
       }
     }

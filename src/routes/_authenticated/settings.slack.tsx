@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api/client";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,7 @@ function SlackSettingsPage() {
   const { data: events = [] } = useQuery({
     queryKey: ["slack-events-recent"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await api
         .from("slack_events")
         .select("event_type, status, created_at, slack_user_id")
         .order("created_at", { ascending: false })
@@ -69,7 +69,7 @@ function SlackSettingsPage() {
   const { data: sessions = [] } = useQuery({
     queryKey: ["slack-sessions-recent"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await api
         .from("slack_sessions")
         .select("*")
         .order("updated_at", { ascending: false })

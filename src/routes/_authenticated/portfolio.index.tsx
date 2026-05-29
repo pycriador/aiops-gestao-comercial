@@ -12,7 +12,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api/client";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ function PortfolioListPage() {
   const { data: agencies = [], isLoading } = useQuery({
     queryKey: ["agencies-list"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await api
         .from("real_estate_agencies")
         .select("*, consultants(name)")
         .order("updated_at", { ascending: false });
@@ -185,18 +185,18 @@ function KanbanBoard({ agencies, isLoading }: { agencies: any[]; isLoading: bool
   const moveMutation = useMutation({
     mutationFn: async ({ agency, toStatus }: { agency: any; toStatus: NegotiationStatus }) => {
       const fromStatus = agency.negotiation_status;
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData } = await api.auth.getUser();
       const userId = userData.user?.id;
       const userName = userData.user?.email ?? null;
 
-      const { error: upErr } = await supabase
+      const { error: upErr } = await api
         .from("real_estate_agencies")
         .update({ negotiation_status: toStatus, updated_by: userId })
         .eq("id", agency.id);
       if (upErr) throw upErr;
 
       // Log interaction for history (trigger will sync agency timestamps)
-      const { error: intErr } = await supabase.from("agency_interactions").insert({
+      const { error: intErr } = await api.from("agency_interactions").insert({
         agency_id: agency.id,
         interaction_type: "status_change",
         status_before: fromStatus,

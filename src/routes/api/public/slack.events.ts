@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { verifySlackSignature } from "@/lib/slack/verify.server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { apiAdmin } from "@/lib/api/client.server";
 
 /**
  * Slack Events API endpoint.
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/slack/events")({
         }
 
         // Log event for observability
-        await supabaseAdmin.from("slack_events").insert({
+        await apiAdmin.from("slack_events").insert({
           event_type: payload.event?.type ?? payload.type ?? "unknown",
           slack_user_id: payload.event?.user ?? null,
           slack_team_id: payload.team_id ?? null,

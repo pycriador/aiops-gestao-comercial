@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { apiAdmin } from "@/lib/api/client.server";
 import { getProvider } from "@/lib/whatsapp/providers.server";
 import { processInbound } from "@/lib/whatsapp/engine.server";
 
@@ -52,7 +52,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
 
         if (result.reply) {
           const sendRes = await provider.sendMessage(inbound.phone, result.reply);
-          await supabaseAdmin.from("whatsapp_messages").insert({
+          await apiAdmin.from("whatsapp_messages").insert({
             direction: "outbound",
             phone: inbound.phone,
             consultant_id: result.consultant?.id ?? null,

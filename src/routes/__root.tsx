@@ -11,7 +11,7 @@ import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api/client";
 
 function NotFoundComponent() {
   return (
@@ -112,7 +112,17 @@ function AuthSync() {
   const router = useRouter();
   const queryClient = useQueryClient();
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    const { data: { subscription } } =     api.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        queryClient.clear();
+        void router.navigate({ to: "/login", replace: true });
+        return;
+      }
+      if (event === "USER_UPDATED") {
+        queryClient.invalidateQueries();
+        void router.invalidate();
+        return;
+      }
       router.invalidate();
       queryClient.invalidateQueries();
     });

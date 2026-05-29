@@ -1,10 +1,10 @@
 /**
  * Bot engine — stateful flows for WhatsApp consultant updates.
  *
- * Pure server logic, uses supabaseAdmin (bypasses RLS — caller is verified
+ * Pure server logic, uses apiAdmin (bypasses RLS — caller is verified
  * as a registered consultant via phone match).
  */
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { apiAdmin } from "@/lib/api/client.server";
 import { identifyIntent, type Intent } from "./intents";
 import { normalizePhone } from "./provider";
 import { NEGOTIATION_STATUSES, GUARANTOR_TYPES, BR_STATES, type NegotiationStatus } from "@/lib/constants";
@@ -66,7 +66,7 @@ async function findConsultantByPhone(phone: string): Promise<Consultant | null> 
     `55${normalized}`,
     normalized.replace(/^55/, ""),
   ]));
-  const { data } = await supabaseAdmin
+  const { data } = await apiAdmin
     .from("consultants")
     .select("id, name, user_id, phone, active")
     .eq("active", true);
@@ -76,7 +76,7 @@ async function findConsultantByPhone(phone: string): Promise<Consultant | null> 
 }
 
 async function getOrCreateSession(consultant: Consultant, phone: string): Promise<Session> {
-  const { data: active } = await supabaseAdmin
+  const { data: active } = await apiAdmin
     .from("bot_sessions")
     .select("*")
     .eq("phone", phone)
@@ -87,7 +87,7 @@ async function getOrCreateSession(consultant: Consultant, phone: string): Promis
     .maybeSingle();
   if (active) return active as Session;
 
-  const { data: created, error } = await supabaseAdmin
+  const { data: created, error } = await apiAdmin
     .from("bot_sessions")
     .insert({
       consultant_id: consultant.id,
@@ -106,11 +106,11 @@ async function getOrCreateSession(consultant: Consultant, phone: string): Promis
 
 async function updateSession(id: string, patch: Partial<Session>) {
   const payload: any = { ...patch, last_message_at: new Date().toISOString(), expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() };
-  await supabaseAdmin.from("bot_sessions").update(payload).eq("id", id);
+  await apiAdmin.from("bot_sessions").update(payload).eq("id", id);
 }
 
 async function closeSession(id: string, status: "completed" | "abandoned") {
-  await supabaseAdmin.from("bot_sessions").update({ status, current_step: "done" }).eq("id", id);
+  await apiAdmin.from("bot_sessions").update({ status, current_step: "done" }).eq("id", id);
 }
 
 function numberedList<T>(items: T[], render: (t: T, i: number) => string): string {
@@ -148,7 +148,7 @@ export async function processInbound(opts: {
   const intent = identifyIntent(opts.body);
 
   if (!consultant) {
-    await supabaseAdmin.from("whatsapp_messages").insert({
+    await apiAdmin.from("whatsapp_messages").insert({
       direction: "inbound",
       phone,
       message_body: opts.body,
@@ -168,7 +168,7 @@ export async function processInbound(opts: {
   }
 
   const session = await getOrCreateSession(consultant, phone);
-  const inboundLog = await supabaseAdmin
+  const inboundLog = await apiAdmin
     .from("whatsapp_messages")
     .insert({
       direction: "inbound",
@@ -187,7 +187,7 @@ export async function processInbound(opts: {
   try {
     const reply = await route({ consultant, session, message: opts.body });
 
-    await supabaseAdmin.from("whatsapp_messages").update({ status: "processed" }).eq("id", inboundLog.data?.id ?? "");
+    await apiAdmin.from("whatsapp_messages").update({ status: "processed" }).eq("id", inboundLog.data?.id ?? "");
 
     return {
       reply: reply.text,
@@ -198,7 +198,7 @@ export async function processInbound(opts: {
       agencyId: session.agency_id,
     };
   } catch (e: any) {
-    await supabaseAdmin
+    await apiAdmin
       .from("whatsapp_messages")
       .update({ status: "error", error_message: e?.message ?? "unknown" })
       .eq("id", inboundLog.data?.id ?? "");
@@ -265,7 +265,7 @@ async function route(ctx: BotContext): Promise<BotReply> {
 
 async function fetchPendingAgencies(consultantId: string) {
   const fifteen = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
-  const { data } = await supabaseAdmin
+  const { data } = await apiAdmin
     .from("real_estate_agencies")
     .select("id, name, city, state, contract_stock, last_interaction_date, c_level_support_needed, negotiation_status")
     .eq("consultant_id", consultantId)
@@ -314,7 +314,7 @@ async function runPendencies(ctx: BotContext): Promise<BotReply> {
 // ---------- flow: update agency ----------
 
 async function startUpdateAgency(ctx: BotContext): Promise<BotReply> {
-  const { data: agencies } = await supabaseAdmin
+  const { data: agencies } = await apiAdmin
     .from("real_estate_agencies")
     .select("id, name, city, state, last_interaction_date")
     .eq("consultant_id", ctx.consultant.id)
@@ -337,7 +337,7 @@ async function startUpdateAgency(ctx: BotContext): Promise<BotReply> {
 }
 
 async function enterUpdateFlowForAgency(ctx: BotContext, agencyId: string): Promise<BotReply> {
-  const { data: agency } = await supabaseAdmin
+  const { data: agency } = await apiAdmin
     .from("real_estate_agencies")
     .select("*")
     .eq("id", agencyId)
@@ -454,12 +454,12 @@ async function runUpdateAgency(ctx: BotContext): Promise<BotReply> {
 
       // Persist: insert interaction (trigger updates agency)
       const d = draft;
-      const { data: agencyBefore } = await supabaseAdmin
+      const { data: agencyBefore } = await apiAdmin
         .from("real_estate_agencies")
         .select("negotiation_status")
         .eq("id", ctx.session.agency_id!)
         .single();
-      const { error } = await supabaseAdmin.from("agency_interactions").insert({
+      const { error } = await apiAdmin.from("agency_interactions").insert({
         agency_id: ctx.session.agency_id!,
         status_before: (agencyBefore as any)?.negotiation_status ?? null,
         status_after: d.status_after ?? null,
@@ -523,7 +523,7 @@ async function runNewAgency(ctx: BotContext): Promise<BotReply> {
       const uf = msg.toUpperCase().slice(0, 2);
       if (!BR_STATES.includes(uf as any)) return { text: `UF inválida. Envie uma das: ${BR_STATES.join(", ")}` };
       // Dedup check
-      const { data: similar } = await supabaseAdmin
+      const { data: similar } = await apiAdmin
         .from("real_estate_agencies")
         .select("id, name, city, state")
         .ilike("name", `%${draft.name}%`)
@@ -615,7 +615,7 @@ async function runNewAgency(ctx: BotContext): Promise<BotReply> {
         return { text: "❌ Cadastro cancelado.", done: true };
       }
       if (c !== 1) return { text: "Responda 1 (Confirmar) ou 2 (Cancelar)." };
-      const { data: created, error } = await supabaseAdmin
+      const { data: created, error } = await apiAdmin
         .from("real_estate_agencies")
         .insert({
           ...draft,
@@ -627,7 +627,7 @@ async function runNewAgency(ctx: BotContext): Promise<BotReply> {
         .single();
       if (error) throw error;
       // Log creation as an interaction
-      await supabaseAdmin.from("agency_interactions").insert({
+      await apiAdmin.from("agency_interactions").insert({
         agency_id: created.id,
         status_after: draft.negotiation_status,
         feedback: "Imobiliária cadastrada via WhatsApp",

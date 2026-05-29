@@ -1,14 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { type FormEvent, useEffect, useState } from "react";
+import { api } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Logo } from "@/components/logo";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+
+import { API_BASE_URL, IS_LOCAL_BACKEND } from "@/lib/api/config";
+import { mapAuthErrorMessage } from "@/lib/backend-health";
+import { useBackendStatus } from "@/hooks/use-backend-status";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -19,48 +24,59 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { status: backendStatus } = useBackendStatus(IS_LOCAL_BACKEND);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    api.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/dashboard" });
     });
   }, [navigate]);
 
   const handleAuth = async (mode: "signin" | "signup") => {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !password) {
+      toast.error("Informe email e senha.");
+      return;
+    }
+    if (IS_LOCAL_BACKEND && backendStatus === "offline") {
+      toast.error("Backend indisponível. Inicie o servidor Flask antes de entrar.");
+      return;
+    }
+
     setLoading(true);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await api.auth.signInWithPassword({
+          email: trimmedEmail,
+          password,
+        });
         if (error) throw error;
         toast.success("Bem-vindo de volta");
         navigate({ to: "/dashboard" });
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
+        const { error } = await api.auth.signUp({
+          email: trimmedEmail,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/dashboard` },
         });
         if (error) throw error;
-        toast.success("Conta criada. Verifique seu email para confirmar.");
+        toast.success("Conta criada com sucesso.");
+        navigate({ to: "/dashboard" });
       }
-    } catch (e: any) {
-      toast.error(e.message || "Falha na autenticação");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Falha na autenticação";
+      toast.error(mapAuthErrorMessage(message));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogle = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Falha no login com Google");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+  const handleSubmit = (event: FormEvent<HTMLFormElement>, mode: "signin" | "signup") => {
+    event.preventDefault();
+    if (!loading) void handleAuth(mode);
   };
+
+  const backendBlocked = IS_LOCAL_BACKEND && backendStatus === "offline";
+  const submitDisabled = loading || backendBlocked || (IS_LOCAL_BACKEND && backendStatus === "checking");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/20 px-4">
@@ -74,37 +90,78 @@ function LoginPage() {
             <CardDescription>Acesso restrito · Targets & Portabilidade</CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {IS_LOCAL_BACKEND && backendStatus === "offline" && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Backend indisponível</AlertTitle>
+              <AlertDescription>
+                Não foi possível conectar a{" "}
+                <span className="font-mono text-xs">{API_BASE_URL}</span>. Inicie o servidor com{" "}
+                <span className="font-mono text-xs">cd backend && python run.py</span> e tente novamente.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {IS_LOCAL_BACKEND && backendStatus === "checking" && (
+            <Alert>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <AlertTitle>Verificando backend…</AlertTitle>
+              <AlertDescription>Conectando a {API_BASE_URL}</AlertDescription>
+            </Alert>
+          )}
+
+          {IS_LOCAL_BACKEND && backendStatus === "online" && (
+            <Alert className="border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400">
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertTitle>Backend conectado</AlertTitle>
+              <AlertDescription>API local respondendo em {API_BASE_URL}</AlertDescription>
+            </Alert>
+          )}
+
           <Tabs defaultValue="signin">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Entrar</TabsTrigger>
               <TabsTrigger value="signup">Criar conta</TabsTrigger>
             </TabsList>
-            {["signin", "signup"].map((m) => (
-              <TabsContent key={m} value={m} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label>Email</Label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@empresa.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Senha</Label>
-                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-                </div>
-                <Button onClick={() => handleAuth(m as "signin" | "signup")} disabled={loading} className="w-full">
-                  {loading ? "..." : m === "signin" ? "Entrar" : "Criar conta"}
-                </Button>
+            {(["signin", "signup"] as const).map((mode) => (
+              <TabsContent key={mode} value={mode}>
+                <form onSubmit={(event) => handleSubmit(event, mode)} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor={`${mode}-email`}>Email</Label>
+                    <Input
+                      id={`${mode}-email`}
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="voce@empresa.com"
+                      disabled={submitDisabled}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`${mode}-password`}>Senha</Label>
+                    <Input
+                      id={`${mode}-password`}
+                      type="password"
+                      autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      disabled={submitDisabled}
+                    />
+                  </div>
+                  <Button type="submit" disabled={submitDisabled} className="w-full">
+                    {loading ? "Entrando…" : mode === "signin" ? "Entrar" : "Criar conta"}
+                  </Button>
+                </form>
               </TabsContent>
             ))}
           </Tabs>
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">ou continuar com</span>
-            </div>
-          </div>
-          <Button variant="outline" className="w-full" onClick={handleGoogle}>
-            Google
-          </Button>
+
+          <p className="text-xs text-center text-muted-foreground">
+            Autenticação local — use email e senha cadastrados no backend.
+          </p>
         </CardContent>
       </Card>
     </div>

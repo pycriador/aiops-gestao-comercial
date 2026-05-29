@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api/client";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ function BotMonitoringPage() {
   const { data: messages = [] } = useQuery({
     queryKey: ["bot-messages"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await api
         .from("whatsapp_messages")
         .select("*, consultants(name)")
         .order("created_at", { ascending: false })
@@ -29,7 +29,7 @@ function BotMonitoringPage() {
   const { data: sessions = [] } = useQuery({
     queryKey: ["bot-sessions"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await api
         .from("bot_sessions")
         .select("*, consultants(name)")
         .order("updated_at", { ascending: false })
@@ -42,7 +42,7 @@ function BotMonitoringPage() {
   const { data: whatsappInteractions = [] } = useQuery({
     queryKey: ["whatsapp-interactions"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await api
         .from("agency_interactions")
         .select("*, real_estate_agencies(name)")
         .eq("source", "whatsapp")

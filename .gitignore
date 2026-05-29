@@ -16,9 +16,51 @@ dist-ssr
 .nitro
 *.local
 
+# ── Environment & secrets ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+.dev.vars
+**/.dev.vars
+secrets.json
+credentials.json
+**/secrets/
+**/credentials/
+*.pem
+*.key
+!*.key.example
+*.p12
+*.pfx
+
 # Wrangler / Cloudflare
 .wrangler/
-.dev.vars
+
+# ── Python ────────────────────────────────────────────────────────────
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local databases (SQLite)
+*.db
+*.sqlite
+*.sqlite3
+backend/data/
+
+# Local SQL with embedded credentials (use *.example templates in repo)
+**/regras.local.txt
+backend/sql/**/regras.txt
 
 # Editor directories and files
 .vscode/*

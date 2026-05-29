@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { apiAdmin } from "@/lib/api/client.server";
 import { slack } from "@/lib/slack/client.server";
 import { daysSince } from "@/lib/constants";
 
@@ -30,13 +30,13 @@ async function run(request: Request) {
     }
   }
 
-  const { data: agencies } = await supabaseAdmin
+  const { data: agencies } = await apiAdmin
     .from("real_estate_agencies")
     .select("id, name, city, state, negotiation_status, contract_stock, c_level_support_needed, last_interaction_date, next_steps, consultant_id, consultants:consultant_id(id, name, slack_user_id, email)")
     .not("consultant_id", "is", null);
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: recent } = await supabaseAdmin
+  const { data: recent } = await apiAdmin
     .from("slack_notifications")
     .select("notification_type, agency_id")
     .gte("created_at", sevenDaysAgo);
@@ -67,7 +67,7 @@ async function run(request: Request) {
         const channel = await slack.openDM(consult.slack_user_id);
         if (!channel) continue;
         const res = await slack.postMessage(channel, { text: t.text });
-        await supabaseAdmin.from("slack_notifications").insert({
+        await apiAdmin.from("slack_notifications").insert({
           notification_type: t.type,
           agency_id: a.id,
           consultant_id: consult.id,

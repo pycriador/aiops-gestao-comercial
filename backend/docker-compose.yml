@@ -1,0 +1,51 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: sqlite:////app/data/agency_watch.db
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: PostgreSQL instead of SQLite
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_USER: agency
+      POSTGRES_PASSWORD: agency
+      POSTGRES_DB: agency_watch
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/postgresql/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql
+      - ./sql/postgresql/002_seed.sql:/docker-entrypoint-initdb.d/002_seed.sql
+
+  # Optional: MariaDB
+  mariadb:
+    image: mariadb:11
+    profiles: ["mariadb"]
+    environment:
+      MARIADB_USER: agency
+      MARIADB_PASSWORD: agency
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: agency_watch
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./sql/mariadb/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql
+      - ./sql/mariadb/002_seed.sql:/docker-entrypoint-initdb.d/002_seed.sql
+
+volumes:
+  pgdata:
+  mysqldata:

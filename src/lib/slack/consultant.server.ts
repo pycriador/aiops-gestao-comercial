@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { apiAdmin } from "@/lib/api/client.server";
 import { slack } from "./client.server";
 
 export type SlackConsultant = {
@@ -16,7 +16,7 @@ export type SlackConsultant = {
 export async function resolveConsultant(slackUserId: string): Promise<SlackConsultant | null> {
   // 1. cache hit
   {
-    const { data } = await supabaseAdmin
+    const { data } = await apiAdmin
       .from("consultants")
       .select("id, name, user_id, email, slack_user_id, active")
       .eq("slack_user_id", slackUserId)
@@ -30,7 +30,7 @@ export async function resolveConsultant(slackUserId: string): Promise<SlackConsu
     const info = await slack.usersInfo(slackUserId);
     const email: string | undefined = info.user?.profile?.email;
     if (!email) return null;
-    const { data: consult } = await supabaseAdmin
+    const { data: consult } = await apiAdmin
       .from("consultants")
       .select("id, name, user_id, email, active")
       .ilike("email", email)
@@ -38,7 +38,7 @@ export async function resolveConsultant(slackUserId: string): Promise<SlackConsu
       .maybeSingle();
     if (!consult) return null;
     // cache it
-    await supabaseAdmin
+    await apiAdmin
       .from("consultants")
       .update({ slack_user_id: slackUserId })
       .eq("id", consult.id);
@@ -51,7 +51,7 @@ export async function resolveConsultant(slackUserId: string): Promise<SlackConsu
 /** Verify whether the resolved consultant is admin/manager (for unrestricted carteira access). */
 export async function isPrivileged(consultantUserId: string | null): Promise<boolean> {
   if (!consultantUserId) return false;
-  const { data } = await supabaseAdmin
+  const { data } = await apiAdmin
     .from("user_roles")
     .select("role")
     .eq("user_id", consultantUserId);

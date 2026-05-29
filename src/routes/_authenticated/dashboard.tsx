@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api/client";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
@@ -32,7 +32,7 @@ function DashboardPage() {
   const { data: agencies = [], isLoading } = useQuery({
     queryKey: ["agencies-all"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await api
         .from("real_estate_agencies")
         .select("*")
         .order("updated_at", { ascending: false });

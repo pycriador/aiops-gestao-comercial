@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { inspectSlackSignature } from "@/lib/slack/verify.server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { apiAdmin } from "@/lib/api/client.server";
 import { slackRuntimeEnvironment } from "@/lib/slack/constants";
 import { homeMenu } from "@/lib/slack/blocks";
 
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/api/public/slack/commands")({
 
           // fire-and-forget diagnostic insert (no await — não bloqueia o ACK)
           const recordDiagnostic = (status: string, response?: any, errorMessage?: string) => {
-            supabaseAdmin.from("slack_events").insert({
+            apiAdmin.from("slack_events").insert({
               event_type: `command:${command || "unknown"}`,
               slack_user_id: slackUserId || null,
               slack_team_id: teamId || null,

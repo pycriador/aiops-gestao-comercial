@@ -20,6 +20,7 @@ import { Route as AuthenticatedBotRouteImport } from './routes/_authenticated/bo
 import { Route as AuthenticatedPortfolioIndexRouteImport } from './routes/_authenticated/portfolio.index'
 import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings.users'
 import { Route as AuthenticatedSettingsSlackRouteImport } from './routes/_authenticated/settings.slack'
+import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
 import { Route as AuthenticatedSettingsHubspotRouteImport } from './routes/_authenticated/settings.hubspot'
 import { Route as AuthenticatedPortfolioNewRouteImport } from './routes/_authenticated/portfolio.new'
 import { Route as AuthenticatedPortfolioAgencyIdRouteImport } from './routes/_authenticated/portfolio.$agencyId'
@@ -88,6 +89,12 @@ const AuthenticatedSettingsSlackRoute =
     path: '/settings/slack',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsProfileRoute =
+  AuthenticatedSettingsProfileRouteImport.update({
+    id: '/settings/profile',
+    path: '/settings/profile',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsHubspotRoute =
   AuthenticatedSettingsHubspotRouteImport.update({
     id: '/settings/hubspot',
@@ -150,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/portfolio/$agencyId': typeof AuthenticatedPortfolioAgencyIdRoute
   '/portfolio/new': typeof AuthenticatedPortfolioNewRoute
   '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
+  '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/slack': typeof AuthenticatedSettingsSlackRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/portfolio/': typeof AuthenticatedPortfolioIndexRoute
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
   '/portfolio/$agencyId': typeof AuthenticatedPortfolioAgencyIdRoute
   '/portfolio/new': typeof AuthenticatedPortfolioNewRoute
   '/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
+  '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/slack': typeof AuthenticatedSettingsSlackRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/portfolio': typeof AuthenticatedPortfolioIndexRoute
@@ -193,6 +202,7 @@ export interface FileRoutesById {
   '/_authenticated/portfolio/$agencyId': typeof AuthenticatedPortfolioAgencyIdRoute
   '/_authenticated/portfolio/new': typeof AuthenticatedPortfolioNewRoute
   '/_authenticated/settings/hubspot': typeof AuthenticatedSettingsHubspotRoute
+  '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/settings/slack': typeof AuthenticatedSettingsSlackRoute
   '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/_authenticated/portfolio/': typeof AuthenticatedPortfolioIndexRoute
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/portfolio/$agencyId'
     | '/portfolio/new'
     | '/settings/hubspot'
+    | '/settings/profile'
     | '/settings/slack'
     | '/settings/users'
     | '/portfolio/'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/portfolio/$agencyId'
     | '/portfolio/new'
     | '/settings/hubspot'
+    | '/settings/profile'
     | '/settings/slack'
     | '/settings/users'
     | '/portfolio'
@@ -258,6 +270,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portfolio/$agencyId'
     | '/_authenticated/portfolio/new'
     | '/_authenticated/settings/hubspot'
+    | '/_authenticated/settings/profile'
     | '/_authenticated/settings/slack'
     | '/_authenticated/settings/users'
     | '/_authenticated/portfolio/'
@@ -360,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsSlackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/profile': {
+      id: '/_authenticated/settings/profile'
+      path: '/settings/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof AuthenticatedSettingsProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/hubspot': {
       id: '/_authenticated/settings/hubspot'
       path: '/settings/hubspot'
@@ -451,6 +471,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedPortfolioRoute: typeof AuthenticatedPortfolioRouteWithChildren
   AuthenticatedSettingsHubspotRoute: typeof AuthenticatedSettingsHubspotRoute
+  AuthenticatedSettingsProfileRoute: typeof AuthenticatedSettingsProfileRoute
   AuthenticatedSettingsSlackRoute: typeof AuthenticatedSettingsSlackRoute
   AuthenticatedSettingsUsersRoute: typeof AuthenticatedSettingsUsersRoute
 }
@@ -462,6 +483,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedPortfolioRoute: AuthenticatedPortfolioRouteWithChildren,
   AuthenticatedSettingsHubspotRoute: AuthenticatedSettingsHubspotRoute,
+  AuthenticatedSettingsProfileRoute: AuthenticatedSettingsProfileRoute,
   AuthenticatedSettingsSlackRoute: AuthenticatedSettingsSlackRoute,
   AuthenticatedSettingsUsersRoute: AuthenticatedSettingsUsersRoute,
 }
@@ -483,3 +505,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
