@@ -29,6 +29,7 @@ Consultants update their portfolio via the web app, Slack slash commands, or Wha
   - [WhatsApp](#whatsapp-integration)
 - [Permissions Matrix](#permissions-matrix)
 - [Deployment](#deployment)
+- [Extra tip: Changing the Git remote](#extra-tip-changing-the-git-remote)
 - [License](#license)
 
 ---
@@ -445,6 +446,54 @@ Set secrets via Wrangler or platform env:
 npx wrangler secret put API_SERVICE_KEY
 npx wrangler secret put SLACK_BOT_TOKEN
 ```
+
+---
+
+## Extra tip: Changing the Git remote
+
+Use this when you need to push the project to a **new GitHub repository** (for example, after forking or moving orgs).
+
+### 1. Commit local changes
+
+```bash
+git add -A
+git commit -m "Your commit message"
+```
+
+Ensure `.env` and other secrets stay out of the commit (they should be listed in `.gitignore`).
+
+### 2. Add the new remote and push
+
+```bash
+git remote add aiops git@github.com:YOUR_ORG/YOUR_REPO.git
+git push -u aiops main
+```
+
+If the remote already has an unrelated history (e.g. GitHub’s initial README commit), use a safe force push:
+
+```bash
+git push -u aiops main --force-with-lease
+```
+
+### 3. Make the new repo the default `origin`
+
+Replace the old remote and point `main` at the new upstream:
+
+```bash
+git remote remove origin
+git remote rename aiops origin
+git branch --set-upstream-to=origin/main main
+```
+
+Verify:
+
+```bash
+git remote -v
+# origin  git@github.com:YOUR_ORG/YOUR_REPO.git (fetch)
+# origin  git@github.com:YOUR_ORG/YOUR_REPO.git (push)
+```
+
+After this, `git push` and `git pull` use the new repository by default.
 
 ---
 
